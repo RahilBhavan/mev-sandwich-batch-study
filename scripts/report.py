@@ -87,7 +87,8 @@ def main():
     w("|---|---:|---:|")
     labels = {"0x68b3465833fb72a70ecdf485e0e4c7bd8665fc45": "Uniswap SwapRouter02",
               "0x66a9893cc07d91d95644aedd05d03f95e1dba8af": "Uniswap Universal Router",
-              "0x23617e59a5925b2a4bf75d73ff6711cd0b29de85": "Universal Router-style execute() (unlabelled)",
+              "0x23617e59a5925b2a4bf75d73ff6711cd0b29de85": "Uniswap Universal Router v2.1.2",
+              "0x4c82d1fbfe28c977cbb58d8c7ff8fcf9f70a2cca": "Uniswap Universal Router v2.1.1",
               "0x6131b5fae19ea4f9d964eac0408e4408b66337b5": "KyberSwap MetaAggregationRouterV2",
               "0x0000000000001ff3684f28c67538d4d072c22734": "0x AllowanceHolder",
               "0x1231deb6f5749ef6ce6943a275a1d3e7486f4eae": "LI.FI Diamond",
@@ -100,7 +101,7 @@ def main():
         a[1] += num(y["loss_a_usd"])
     for k, (n, l) in sorted(agg.items(), key=lambda kv: -kv[1][1]):
         w(f"| {k} | {n} | ${l:,.0f} |")
-    w("\nLabels are from the contracts' public deployments; \"unlabelled\" was not verified.\n")
+    w("\nLabels are the contracts' Etherscan name tags or public deployment lists (Universal Router v2.1.1/v2.1.2 tags read 2026-10-17).\n")
     open(os.path.join(R, "tables.md"), "w").write("\n".join(out))
 
     # -- figure: cumulative victim loss, sandwiches ranked by loss ------------------------------------

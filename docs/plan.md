@@ -37,9 +37,9 @@ Days 1–10 are done except the items that need Rahil (marked ⧗). Results: `do
 | 1 Pool selection | Done. Week frozen; 7-day counts for the pool and the control |
 | 2 Ingest | Done. 70,669 swaps, 129 liquidity events, 69,058 txs. A rerun gives byte-identical Parquet files; eth.drpc.org returns the same 70,669 swap logs |
 | 3–4 Exact simulator | Done. 100% of swaps reproduce; three negative controls break it |
-| 5 Detector | Done. 30-hit review. ⧗ Dune cross-check (query and comparison script ready in `docs/dune/`, `scripts/compare_dune.py`), ⧗ five human Etherscan checks |
+| 5 Detector | Done. 30-hit evidence review, and 5 hits (15 pages) checked on Etherscan, which found just-in-time liquidity in 37 sandwiches (now handled). ⧗ Dune cross-check needs a trial account (query and comparison script ready in `docs/dune/`, `scripts/compare_dune.py`) |
 | 6 Loss measures | Done. (a), (b), (c) |
-| 7 Limits from input data | Done for Universal Router, SwapRouter02 and SwapRouter (115 of 244 victims). The ≥ 90% target was not met: the rest trade through aggregators and smart wallets, which use the executed-price fallback |
+| 7 Limits from input data | Done. 144 of the 160 victims whose limit is attributable to this pool (90.0%). Sources: Uniswap routers, routers nested in smart-wallet batches, and 1inch, KyberSwap, LI.FI, 0x and `0x8feab81d…` for single-pool routes. The literal target, ≥ 90% of all swaps in sandwich blocks, is unreachable by construction: 518 of the 1,182 are attackers' own legs and most of the rest are bots without public calldata (about 15% decode). The other 84 victims route through several pools, so their bounds cannot be attributed to this pool |
 | 8–9 Mechanism | Done. Attacker net ≤ 0 in every run; prevented-share table |
 | 10 Write-up | Done. Figure (present-data brief passes), methods note, two email drafts in `outreach/` (gitignored). ⧗ Rahil's review, publish decision and send |
 

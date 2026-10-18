@@ -17,7 +17,13 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import pyarrow.parquet as pq
 
 from mev import calldata, data, detect, mechanism, rpc, v3
-from mev.pool import FEE_PIPS, WEEK
+from mev.pool import FEE_PIPS, POOL, T_SWAP, WEEK
+
+V2_SWAP = "0xd78ad95fa46c994b6551d0da85fc275fe613ce37657fb8d5e3d130840159d822"
+T_TRANSFER = "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef"
+WETH_ADDR = "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"
+USDT_ADDR = "0xdac17f958d2ee523a2206206994597c13d831ec7"
+V4_SWAP = "0x40e9cecb9f5f1f1c5b9c97dec2917b7ee92e57ba5563708daca94dd84ad7112f"
 
 ARGS = [x for x in sys.argv[1:] if not x.startswith("--")]
 D = ARGS[0] if ARGS else "data/week"
@@ -41,7 +47,7 @@ def pool_price_limit(z4o, rate_out_per_in):
     return (1 - F) / rate_out_per_in  # pays P / (1 - f) token1 per token0
 
 
-def specs_for_block(swaps, txs, modes):
+def specs_for_block(swaps, txs, modes, single_route=frozenset()):
     """One order per swap. Mode and limit from calldata where it decodes and agrees with the log;
     otherwise mode from the replay and limit = executed average price (a limit the trader accepted)."""
     by_tx = {}
@@ -50,7 +56,16 @@ def specs_for_block(swaps, txs, modes):
     out = []
     for tx, ss in by_tx.items():
         dec = [d for d in calldata.decode(txs[tx]["input"]) if not d["multihop"]]
+        if not dec:
+            dec = [d for d in calldata.decode_embedded(txs[tx]["input"]) if not d["multihop"]]
         use_dec = len(dec) == len(ss)
+        if not use_dec and tx in single_route and len(ss) == 1:
+            # aggregator or wallet whose whole route is this pool: its minimum output is this swap's bound
+            z4o, paid, got = actual(ss[0])
+            m = calldata.route_bound(txs[tx]["input"], paid, got, z4o)
+            if m is not None and "exact_in" in modes[(ss[0]["block"], ss[0]["log_index"])].split(","):
+                dec, use_dec = [dict(exact_in=True, amount=paid, bound=m, sqrt_limit=0, multihop=False,
+                                     route=True)], True
         for k, s in enumerate(ss):
             z4o, paid, got = actual(s)
             m = modes[(s["block"], s["log_index"])]
@@ -59,13 +74,15 @@ def specs_for_block(swaps, txs, modes):
             if d is not None:
                 amt = d["amount"] if d["amount"] is not None else (paid if d["exact_in"] else got)
                 limited = "limit_in" in m.split(",")  # stopped early by a price limit
-                if d["exact_in"] and amt != paid and not limited or not d["exact_in"] and amt != got:
+                if amt <= 0 or d["exact_in"] and amt != paid and not limited or not d["exact_in"] and amt != got:
                     d = None  # calldata does not describe this log; fall back
             if d is not None:
                 # the order's amount is what was specified; a price-limited exact-in used only `paid`
-                spec.update(exact_in=d["exact_in"], amount=paid if d["exact_in"] else got, limit_src="calldata")
+                spec.update(exact_in=d["exact_in"], amount=paid if d["exact_in"] else got,
+                            limit_src="calldata_route" if d.get("route") else "calldata")
                 lim = None
                 if d["bound"]:
+                    spec["bound"] = d["bound"]
                     rate = Fraction(d["bound"], amt) if d["exact_in"] else Fraction(amt, d["bound"])
                     lim = pool_price_limit(z4o, rate)
                 if d["sqrt_limit"]:
@@ -89,6 +106,8 @@ def run_cf(snapshot, block_events, attacker_txs, specs_by_id):
     res = {}
     for e in block_events:
         if e["kind"] != "swap":
+            if e["tx"] in attacker_txs:
+                continue  # no attack also means no attacker just-in-time liquidity
             p.modify(e["tick_lower"], e["tick_upper"], (1 if e["kind"] == "mint" else -1) * e["liq_amount"])
             continue
         sid = (e["block"], e["log_index"])
@@ -100,10 +119,11 @@ def run_cf(snapshot, block_events, attacker_txs, specs_by_id):
     return res
 
 
-def run_mech(snapshot, block_events, specs, order, unlimited=False, fee_phase1=False, unlimited_txs=()):
+def run_mech(snapshot, block_events, specs, order, unlimited=False, fee_phase1=False, unlimited_txs=(),
+             drop_liquidity_txs=()):
     p = snapshot.copy()
     for e in block_events:
-        if e["kind"] != "swap":
+        if e["kind"] != "swap" and e["tx"] not in drop_liquidity_txs:
             p.modify(e["tick_lower"], e["tick_upper"], (1 if e["kind"] == "mint" else -1) * e["liq_amount"])
     orders = [dict(id=s["id"], z4o=s["z4o"], exact_in=s["exact_in"], amount=s["amount"],
                    limit=None if unlimited or s["tx"] in unlimited_txs else s["limit"])
@@ -160,6 +180,14 @@ def main():
     hd = cached(os.path.join(D, "headers.json"), lambda: dict(zip(map(str, blocks), rpc.batch(
         [("eth_getBlockByNumber", [hex(b), False]) for b in blocks], size=20))))
 
+    vtx = sorted({v for x in sws for v in x["victims"]})
+    vrc = cached(os.path.join(D, "victim_receipts.json"), lambda: dict(zip(vtx, rpc.batch(
+        [("eth_getTransactionReceipt", [h]) for h in vtx], size=20))))
+    swap_topics = {T_SWAP, V2_SWAP, V4_SWAP}
+    single_route = frozenset(h for h, r in vrc.items()
+                             if {lg["address"].lower() for lg in r["logs"]
+                                 if lg["topics"] and lg["topics"][0] in swap_topics} == {POOL})
+
     # walk the week; snapshot the pool at the start of each sandwich block
     pool = data.initial_pool(st)
     snaps, bev = {}, {}
@@ -182,7 +210,7 @@ def main():
         snap, be = snaps[b], bev[b]
         r0 = mechanism.r0_of(snap)
         bswaps = [e for e in be if e["kind"] == "swap" and (e["amount0"] or e["amount1"])]
-        specs = specs_for_block(bswaps, txs, modes)
+        specs = specs_for_block(bswaps, txs, modes, single_route)
         sid = {s["id"]: s for s in specs}
         mine = [x for x in sws if x["block"] == b]
         atk_txs = {x["front"] for x in mine} | {x["back"] for x in mine}
@@ -195,7 +223,7 @@ def main():
         runs = [run_mech(snap, be, specs, o) for o in draws]
         unl = run_mech(snap, be, specs, arrival, unlimited=True)
         fee1 = run_mech(snap, be, specs, arrival, fee_phase1=True)
-        rm = run_mech(snap, be, specs, no_atk)
+        rm = run_mech(snap, be, specs, no_atk, drop_liquidity_txs=atk_txs)
         au = run_mech(snap, be, specs, arrival, unlimited_txs=atk_txs)
         au_runs = [run_mech(snap, be, specs, o, unlimited_txs=atk_txs) for o in draws]
 
@@ -209,10 +237,21 @@ def main():
             return tot
 
         for x in mine:
+            # (b) attacker's net token flow with the pool in both legs: swaps plus any just-in-time
+            # liquidity added, removed and fees collected, from the receipts' ERC-20 Transfer logs
             act = 0
-            for s in specs:
-                if s["tx"] in (x["front"], x["back"]):
-                    act += usd(s["got"], not s["z4o"], r0) - usd(s["paid"], s["z4o"], r0)
+            for hh in (x["front"], x["back"]):
+                for lg in rc[hh]["logs"]:
+                    if not lg["topics"] or lg["topics"][0] != T_TRANSFER or len(lg["topics"]) < 3:
+                        continue
+                    tok = lg["address"].lower()
+                    if tok not in (WETH_ADDR, USDT_ADDR):
+                        continue
+                    amt = int(lg["data"], 16)
+                    src, dst = "0x" + lg["topics"][1][-40:], "0x" + lg["topics"][2][-40:]
+                    sign = 1 if src == POOL else -1 if dst == POOL else 0
+                    act += sign * usd(amt, tok == WETH_ADDR, r0)
+            jit = any(e["kind"] != "swap" and e["tx"] in (x["front"], x["back"]) for e in be)
             gas = sum(int(rc[h]["gasUsed"], 16) * int(rc[h]["effectiveGasPrice"], 16) for h in (x["front"], x["back"]))
             gas_usd = gas * float(r0) / 1e6   # wei of ETH valued at the WETH price
             h = hd[str(b)]
@@ -243,15 +282,12 @@ def main():
                     gau += usd(gain(s, au[s["id"]], s["paid"], s["got"])[0], is0, r0)
                     for k, rr in enumerate(au_runs):
                         gaud[k] += usd(gain(s, rr[s["id"]], s["paid"], s["got"])[0], is0, r0)
-                    if s["limit_src"] == "calldata" and s["limit"] is not None:
+                    if s.get("bound"):
                         # (c) slippage tolerance available to the attacker: no-attack result minus the bound
-                        dec = [d for d in calldata.decode(txs[vt]["input"]) if not d["multihop"]]
-                        if len(dec) == len(vs):
-                            d = dec[vs.index(s)]
-                            if s["exact_in"]:
-                                slack += usd(cg - d["bound"], not s["z4o"], r0)
-                            else:
-                                slack += usd(d["bound"] - cp, s["z4o"], r0)
+                        if s["exact_in"]:
+                            slack += usd(cg - s["bound"], not s["z4o"], r0)
+                        else:
+                            slack += usd(s["bound"] - cp, s["z4o"], r0)
                 srcs = sorted({s["limit_src"] for s in vs})
                 for k in range(DRAWS):
                     agg["static"][k] += min(max(gd[k], 0), la) if la > 0 else 0
@@ -278,7 +314,7 @@ def main():
             sw_rows.append(dict(
                 block=b, front=x["front"], back=x["back"], n_victims=len(x["victims"]), attacker_eoa=x["attacker_eoa"],
                 attacker_to=x["attacker_to"], ratio=round(x["ratio"], 5), strict=x["strict"],
-                attacker_gross_b_usd=round(act, 4), attacker_gas_usd=round(gas_usd, 4),
+                attacker_gross_b_usd=round(act, 4), jit_liquidity=jit, attacker_gas_usd=round(gas_usd, 4),
                 attacker_net_of_gas_usd=round(act - gas_usd, 4), victim_loss_a_usd=round(vloss, 4),
                 prevented_deterred_usd=round(vdet, 4), prevented_static_arrival_usd=round(vprev, 4),
                 mech_attacker_net_usd=round(atk_net(main, x), 6),
@@ -326,9 +362,12 @@ def main():
             sorted(agg["attacker_unlimited"])[int(0.95 * DRAWS) - 1] / loss, 4),
         prevented_share_static_all_unlimited=share("mech_gain_unlimited_usd"),
         prevented_share_static_fee_phase1=share("mech_gain_fee_phase1_usd"),
+        sandwiches_with_jit_liquidity=sum(1 for r in sw_rows if r["jit_liquidity"]),
         excess_deterred_usd=round(sum(max(r["mech_gain_attacker_removed_usd"] - max(r["loss_a_usd"], 0), 0)
                                       for r in vic_rows), 2),
         victims_limit_from_calldata=sum(1 for r in vic_rows if r["limit_src"].startswith("calldata")),
+        victims_single_pool_route=len(single_route),
+        victims_limit_attributable_decoded=sum(1 for r in vic_rows if r["limit_src"].startswith("calldata")),
         victims_min_fill_static_arrival=min(r["filled"] for r in vic_rows),
         draws=DRAWS, seed=SEED,
     )

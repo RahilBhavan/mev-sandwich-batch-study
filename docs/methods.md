@@ -8,7 +8,7 @@ Methods note, 17 October 2026. All numbers come from `results/` and are reproduc
 
 **Answer.**
 - **The attacks.** From 5 to 11 October 2026 the pool had 70,669 swaps. 236 sandwiches hit 244 victims, who lost **$12,387** against what they would have received with no front-run.
-- **Who profits.** Attackers grossed $6,242 on the pool and paid $5,703 of it, 91%, as gas, most of which goes to block builders as priority fees.
+- **Who profits.** Attackers grossed $8,713 on the pool and paid at least $5,703 of it, 65%, as gas. Most of that goes to block builders as priority fees.
 - **The attack under the mechanism.** Replayed through the mechanism, no sandwich makes money for its attacker. All 236 lose money in arrival order, and the best case across every ordering and variant is exactly $0.
 - **The victims.** If attackers stop because the attack no longer pays, victims recover essentially 100% of the loss. If the identical orders were submitted anyway, they recover 52% to 99% depending on assumptions, with a central estimate of 75%.
 
@@ -67,19 +67,26 @@ The rule is in `mev/detect.py`; it follows Qin, Zhou and Gervais (S&P 2022) and 
 | mevrevolutionx.eth | 56 | $1,815 |
 | Third (no ENS name) | 33 | $3,719 |
 
-**Not yet done.** A Dune cross-check needs a trial account (`docs/dune/`), and no human has spot-checked hits on Etherscan.
+**Etherscan check.** I read 15 transaction pages covering 5 hits on etherscan.io. All 5 are sandwiches: the pages match the RPC data, attacker contracts carry Etherscan's MEV-bot name tags, and block positions are front-run, then victim, then back-run.
+
+The check found the just-in-time liquidity pattern and the builder bribes. Both are now handled or stated (see (b)).
+
+**Not done.** A Dune cross-check needs a trial account; the query and comparison script are in `docs/dune/`.
 
 ## Loss measures
 
-- **(a) Counterfactual loss, the headline.** Replay the block from its starting state with every attacker leg removed, re-executing each remaining swap with the amount it specified. The victim's loss is no-attack output minus actual output, or for exact-output swaps, actual input minus no-attack input. Amounts are valued at the block's starting price, with USDT taken as $1.
+- **(a) Counterfactual loss, the headline.** Replay the block from its starting state with every attacker swap and liquidity change removed, re-executing each remaining swap with the amount it specified. The victim's loss is no-attack output minus actual output, or for exact-output swaps, actual input minus no-attack input. Amounts are valued at the block's starting price, with USDT taken as $1.
   - The median victim lost $14.13.
   - The 20 largest sandwiches carry 64% of the week's loss.
   - The largest single loss was $1,714, on a $17,637 sale that had no minimum output.
-- **(b) Attacker gross.** The attacker's net position across both legs on this pool, at the starting price: $6,242. Gas comes from receipts: $5,703. Direct payments to builders inside the transaction need traces and are not counted, so (b) net of gas is an upper bound on what attackers kept.
+- **(b) Attacker gross.** Every WETH and USDT transfer between the pool and the attacker's two transactions, valued at the starting price: $8,713.
+  - This includes just-in-time liquidity. In 37 sandwiches the attacker also adds liquidity in the front-run and removes it, with fees, in the back-run.
+  - Gas from receipts: $5,703.
+  - Payments to builders by internal ETH transfer need traces and are not counted. Etherscan shows them (for example, 0.251 ETH to Titan Builder in block 26164108). So (b) net of gas is an upper bound on what attackers kept.
 - **(c) Slippage tolerance available.** The no-attack output minus the victim's own minimum output, from decoded router input data.
-  - Defined for 88 victims, whose tolerance totalled $1,062.
-  - Attackers took $1,043 of it (98%), and the median victim lost 100% of their own tolerance. Attackers size the front-run to push each victim exactly to its minimum.
-  - Another 27 decoded victims had set no minimum at all.
+  - Defined for 115 victims, whose tolerance totalled $1,582.
+  - Attackers took $1,544 of it (98%), and the median victim lost 100% of their own tolerance. Attackers size the front-run to push each victim exactly to its minimum.
+  - Another 29 decoded victims had set no minimum at all.
 
 ## The mechanism counterfactual
 
@@ -94,7 +101,12 @@ The rule is in `mev/detect.py`; it follows Qin, Zhou and Gervais (S&P 2022) and 
 **Orders.** Every swap in a sandwich block becomes an order.
 - **Type and amount** come from decoded router input data where it decodes and agrees with the log: Universal Router, SwapRouter02 and SwapRouter, including multicall. Otherwise they come from the replay.
 - **Limits.** Uniswap limits bound the *average* price; the paper's limit is *marginal*. The average limit is used as a marginal one, net of the 0.01% fee. Where no limit decodes, the executed average price is used, a price the trader is known to have accepted.
-- **Coverage.** Victims' limits came from input data for 115 of 244 victims (27 of them with no limit), and from the executed price for 129.
+- **Coverage.** A victim's limit applies to this pool only if it was set on this pool's hop (Uniswap routers), or if its whole route was this pool (checked from the victim's receipt). That is true for 160 of the 244 victims; the other 84 route through several pools.
+  - Limits were decoded for 144 of those 160 (90.0%; 29 of them with no minimum).
+  - Sources: Universal Router, SwapRouter02 and SwapRouter calls, including router calls nested in smart-wallet batches; 1inch v6, KyberSwap, LI.FI, 0x Settler and router `0x8feab81d…` for single-pool routes.
+  - Each aggregator decode must match the logs: the specified input equals the pooled input (up to a 1% aggregator fee) or the destination token matches, and the minimum cannot exceed the actual output.
+  - All other victims use the executed price.
+  - Across all 1,182 swaps in sandwich blocks, coverage is about 15%. 518 of those swaps are the attackers' own legs and most of the rest are bots; neither has public calldata.
 
 **Results** (`results/tables.md`, Table 2):
 
@@ -122,6 +134,7 @@ When the back-run has no limit, it joins the opposite side and is matched agains
 - **Same order flow.** The counterfactual replays the observed orders. Under the mechanism, bots, builders and traders would behave differently. The deterred case assumes attackers simply stop. Working out the actual response is an empirical game the replay can't settle.
 - **What the detector misses.** It sees only same-block, single-pool sandwiches. Cross-block and multi-pool attacks are missed, and private-flow attacks are visible but their causes are not.
 - **Average limit as marginal limit.** This is conservative for victims in phase 2, and it is what drives the static lower bound.
+- **Just-in-time liquidity.** The paper's model has no liquidity changes inside a block. The mechanism runs apply them at the start of the block, and the attacker net under the mechanism counts the attacker's orders only.
 - **Assumptions that differ from Uniswap.** The paper assumes no fee, public orders, partial fills and a constant-function curve. Concentrated liquidity is constant-product only within each tick range. The paper's proofs need increasing marginal cost, which v3 satisfies.
 - **One pool, one week.** A week is one sample, not an estimate of a yearly rate.
 

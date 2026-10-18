@@ -112,3 +112,97 @@ def decode(input_hex):
         return _router_call(c)
     except (IndexError, ValueError):
         return []
+
+
+# -- route-level bounds from aggregators and smart-wallet wrappers ------------------------------------
+# An aggregator's minimum output covers its whole route. It is a limit for this pool only when the route is this
+# pool alone; the caller must check that from the receipt. Every decode is validated against the logs: the
+# specified input must equal the swap's actual input (up to a 1% aggregator fee) and the bound must not exceed the actual output.
+SEL_1INCH_SWAP = "07ed2379"     # 1inch v6 swap(executor, (src,dst,srcRecv,dstRecv,amount,minReturn,flags), data)
+SEL_KYBER_SWAP = "e21fd0e9"     # KyberSwap MetaAggregationRouterV2 swap(SwapExecutionParams)
+ADJACENT_SELS = ("0d5f0e3b", "0c307f76")  # router 0x8feab81d (2,296 senders that week): amount then minReturn
+SEL_ALLOWANCE_EXEC = "2213bc0b"  # 0x AllowanceHolder exec(operator, token, amount, target, data)
+SEL_SETTLER_EXEC = "1fff991f"   # 0x Settler execute((recipient, buyToken, minAmountOut), actions, bytes32)
+LIFI_SWAPS = ("736eac0b", "80c65808", "17917a4e", "a3443faa", "4630a0d8", "5fd9ae2e", "2c57e884")
+# LI.FI swap facets: (bytes32 txId, string integrator, string referrer, address receiver, uint256 minAmountOut, ...)
+ROUTER_SELS = {bytes.fromhex(s) for s in UR_EXEC + MULTICALL + ("04e45aaf", "5023b4df", "414bf389", "db3e2198",
+                                                                    "b858183f", "09b81346", "c04b8d59", "f28c0498")}
+
+
+def _words(b):
+    return [_w(b, i) for i in range(0, len(b) - 31, 32)]
+
+
+def _amount_ok(x, paid):
+    """The router's specified input may exceed what reached the pool by an aggregator fee of up to 1%."""
+    return paid <= x <= paid * 101 // 100
+
+
+def _adjacent(a, paid, got):
+    """amount followed by minReturn (1inch and KyberSwap swap descriptions)."""
+    ws = _words(a)
+    for i in range(len(ws) - 1):
+        if _amount_ok(ws[i], paid) and 0 < ws[i + 1] <= got and ws[i + 1] * 2 >= got:
+            return ws[i + 1]
+    return None
+
+
+def _route_bound(c, paid, got, out_token):
+    sel, a = c[:4].hex(), c[4:]
+    if sel == SEL_1INCH_SWAP and len(a) >= 224:
+        # swap(executor, (srcToken, dstToken, srcReceiver, dstReceiver, amount, minReturnAmount, flags), data):
+        # the struct is static, so its fields sit at fixed head words; validate the destination token
+        dst, m = a[64 + 12:96].hex(), _w(a, 192)
+        ok_token = dst == out_token or (out_token == WETH and dst == "e" * 40)
+        if ok_token and 0 < m <= got and m * 2 >= got:
+            return m
+        return _adjacent(a, paid, got)
+    if sel in (SEL_KYBER_SWAP,) + ADJACENT_SELS:
+        return _adjacent(a, paid, got)
+    if sel in LIFI_SWAPS and len(a) >= 160:
+        m = _w(a, 128)
+        return m if 0 < m <= got and m * 2 >= got else None
+    if sel == SEL_ALLOWANCE_EXEC and _amount_ok(_w(a, 64), paid):
+        inner = _bytes_at(a, _w(a, 128))
+        return _route_bound(inner, paid, got, out_token)
+    if sel == SEL_SETTLER_EXEC:
+        buy, m = a[44:64].hex(), _w(a, 64)
+        ok_token = buy == out_token or (out_token == WETH and buy == "e" * 40)
+        return m if ok_token and 0 < m <= got and m * 2 >= got else None
+    return None
+
+
+def decode_embedded(input_hex):
+    """Router calls nested in smart-wallet or relayer calldata: decode from each embedded router selector."""
+    c = bytes.fromhex(input_hex[2:])
+    out = []
+    for sel in ROUTER_SELS:
+        i = c.find(sel, 4)
+        while i != -1:
+            try:
+                out = decode("0x" + c[i:].hex())
+            except Exception:
+                out = []
+            if out:
+                return out
+            i = c.find(sel, i + 1)
+    return out
+
+
+def route_bound(input_hex, paid, got, z4o):
+    """Minimum output for an exact-input route, from an aggregator call at the top level or embedded."""
+    out_token = USDT if z4o else WETH
+    try:
+        c = bytes.fromhex(input_hex[2:])
+    except ValueError:
+        return None
+    m = _route_bound(c, paid, got, out_token)
+    if m is not None:
+        return m
+    for s in (SEL_1INCH_SWAP, SEL_KYBER_SWAP, SEL_ALLOWANCE_EXEC, SEL_SETTLER_EXEC) + LIFI_SWAPS:
+        i = c.find(bytes.fromhex(s), 4)
+        if i != -1:
+            m = _route_bound(c[i:], paid, got, out_token)
+            if m is not None:
+                return m
+    return None
