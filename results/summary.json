@@ -1,4 +1,6 @@
 {
+ "pool": "0xc7bbec68d12a0d1830360f8ec58fa599ba1b0e9b",
+ "pool_name": "WETH/USDT 0.01%",
  "block_range": [
   26122440,
   26172657
@@ -13,7 +15,7 @@
  "victim_volume_usd": 576835.85,
  "loss_a_usd": 12386.84,
  "attacker_gross_b_usd": 8713.23,
- "attacker_gas_usd": 5702.97,
+ "attacker_gas_usd": 4399.95,
  "slippage_slack_c_usd": 1581.69,
  "victims_with_slack_c": 115,
  "mech_attacker_net_usd_arrival": -468981.31,

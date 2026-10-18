@@ -10,3 +10,16 @@ $PY scripts/replay.py data/week          # gate: must print matched=100%
 $PY scripts/analyze.py data/week results
 $PY scripts/inspect_hits.py data/week results
 $PY scripts/report.py results
+$PY scripts/dune_rule.py data/week results/dune-rule-replication.csv
+$PY scripts/compare_dune.py results/dune-rule-replication.csv results
+
+# memecoin extension: same pipeline on SIMD/WETH 0.01% (prices WETH from data/week, so run after the main pool)
+export STUDY_POOL=simd-weth
+$PY scripts/ingest.py data/simd-week
+$PY scripts/replay.py data/simd-week
+$PY scripts/analyze.py data/simd-week results/simd-weth
+$PY scripts/inspect_hits.py data/simd-week results/simd-weth
+$PY scripts/report.py results/simd-weth
+$PY scripts/dune_rule.py data/simd-week results/simd-weth/dune-rule-replication.csv
+unset STUDY_POOL
+$PY textbook/build.py

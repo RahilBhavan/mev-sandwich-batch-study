@@ -1,5 +1,7 @@
 """Quick probe: scan recent Ethereum blocks for Uniswap v2/v3/v4 swaps and
-flag same-block sandwiches with a Dune-spellbook-style rule. Exploratory only."""
+flag same-block sandwiches with a Dune-spellbook-style rule. Exploratory only.
+
+usage: python probe_all_pools.py NBLOCKS OUT.json [END_BLOCK]"""
 import json, sys, time, urllib.request, collections
 
 RPC = "https://rpc.mevblocker.io"
@@ -11,19 +13,26 @@ NBLOCKS = int(sys.argv[1]) if len(sys.argv) > 1 else 600
 OUT = sys.argv[2]
 
 
-def rpc(method, params, tries=5):
-    body = json.dumps({"jsonrpc": "2.0", "id": 1, "method": method, "params": params}).encode()
-    for i in range(tries):
-        try:
-            req = urllib.request.Request(RPC, body, {"Content-Type": "application/json", "User-Agent": "probe"})
-            d = json.load(urllib.request.urlopen(req, timeout=60))
-            if "result" in d:
-                return d["result"]
-            print("err", d.get("error"), file=sys.stderr)
-        except Exception as e:
-            print("exc", e, file=sys.stderr)
-        time.sleep(2 * (i + 1))
-    raise RuntimeError(method)
+import os
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from mev import rpc as R  # retries with a fallback endpoint
+
+CACHE = os.path.join(os.path.dirname(os.path.abspath(OUT)), "cache")
+os.makedirs(CACHE, exist_ok=True)
+
+
+def cached(name, fn):
+    path = os.path.join(CACHE, name)
+    if os.path.exists(path):
+        return json.load(open(path))
+    v = fn()
+    json.dump(v, open(path + ".tmp", "w"))
+    os.replace(path + ".tmp", path)
+    return v
+
+
+def rpc(method, params):
+    return R.call(method, params)
 
 
 def s256(h):
@@ -31,12 +40,14 @@ def s256(h):
     return v - (1 << 256) if v >= 1 << 255 else v
 
 
-head = int(rpc("eth_blockNumber", []), 16) - 5
+# optional third argument: last block to scan (default: near the chain head)
+head = int(sys.argv[3]) if len(sys.argv) > 3 else int(rpc("eth_blockNumber", []), 16) - 5
 start = head - NBLOCKS + 1
 swaps = []
 for a in range(start, head + 1, 100):
     b = min(a + 99, head)
-    logs = rpc("eth_getLogs", [{"fromBlock": hex(a), "toBlock": hex(b), "topics": [[V2, V3, V4]]}])
+    logs = cached(f"logs-{a}-{b}.json",
+                  lambda: rpc("eth_getLogs", [{"fromBlock": hex(a), "toBlock": hex(b), "topics": [[V2, V3, V4]]}]))
     for lg in logs:
         t0 = lg["topics"][0]
         data = lg["data"][2:]
@@ -63,13 +74,19 @@ for a in range(start, head + 1, 100):
                           pool=pool, ver=ver, z4o=z4o, amt_in=amt_in, amt_out=amt_out))
 print(f"blocks {start}-{head}: {len(swaps)} swaps", file=sys.stderr)
 
-# tx_from for every tx that swapped
-need = sorted({s["block"] for s in swaps})
+# tx_from only for transactions in pool-blocks that could hold a sandwich: 3+ swaps in both directions
+grp = collections.defaultdict(list)
+for s in swaps:
+    grp[(s["block"], s["pool"])].append(s)
+need = sorted({s["tx"] for g in grp.values() if len(g) >= 3 and len({x["z4o"] for x in g}) == 2 for s in g})
+print(f"candidate txs: {len(need)}", file=sys.stderr)
 frm = {}
-for bn in need:
-    blk = rpc("eth_getBlockByNumber", [hex(bn), True])
-    for tx in blk["transactions"]:
-        frm[tx["hash"]] = tx["from"].lower()
+for k in range(0, len(need), 500):
+    part = need[k:k + 500]
+    got = cached(f"from-{k:07d}.json", lambda: R.batch([("eth_getTransactionByHash", [h]) for h in part], size=50))
+    for h, tx in zip(part, got):
+        frm[h] = tx["from"].lower()
+    print(f"from {min(k + 500, len(need))}/{len(need)}", file=sys.stderr)
 for s in swaps:
     s["from"] = frm.get(s["tx"])
 
@@ -83,7 +100,7 @@ for (bn, pool), ss in by.items():
     for i, f in enumerate(ss):
         for j in range(i + 2, len(ss)):
             bk = ss[j]
-            if bk["from"] != f["from"] or bk["tx"] == f["tx"] or bk["z4o"] == f["z4o"]:
+            if f["from"] is None or bk["from"] != f["from"] or bk["tx"] == f["tx"] or bk["z4o"] == f["z4o"]:
                 continue
             victims = [v for v in ss[i + 1:j] if v["z4o"] == f["z4o"] and v["from"] != f["from"]]
             if not victims:

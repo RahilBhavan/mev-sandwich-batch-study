@@ -4,10 +4,13 @@ This study measures sandwich attacks on one Uniswap pool over one week. It estim
 
 ## Result (5–11 October 2026, Uniswap v3 WETH/USDT 0.01%)
 
-- **Sandwiches and losses.** 70,669 swaps. 236 sandwiches hit 244 victims, who lost **$12,387** against what they would have received with no front-run. Attackers grossed $8,713 and paid at least 65% of it as gas.
+- **Sandwiches and losses.** 70,669 swaps. 236 sandwiches hit 244 victims, who lost **$12,387** against what they would have received with no front-run. Attackers grossed $8,713 and paid at least 50% of it as gas.
 - **Slippage taken.** Where the victim's minimum output could be decoded, attackers took 98% of the slippage tolerance.
 - **The attack under the mechanism.** No sandwich makes money for its attacker in any run.
 - **The victims.** With the same orders replayed, victims keep 75% of their loss on average across 200 random tie-breaks (52–99% across variants). If attackers stop, they keep essentially all of it.
+
+- **Memecoin extension (SIMD/WETH 0.01%, same week).** 240 sandwiches, $1,330 lost, 95% of it by one automated buyer. No attack pays under the mechanism, and victims keep 73% on average with the same orders (`results/simd-weth/`).
+- **Detection cross-check.** Dune's spellbook rule, re-implemented locally, confirms 99.6% and 100% of the sandwich blocks in the two pools (`results/dune-rule-replication.md`).
 
 ![Cumulative victim loss](results/figure.png)
 

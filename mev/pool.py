@@ -1,9 +1,26 @@
-"""Constants for the study pool and event decoding."""
-POOL = "0xc7bbec68d12a0d1830360f8ec58fa599ba1b0e9b"  # Uniswap v3 WETH/USDT 0.01%
-TOKEN0, TOKEN1 = "WETH", "USDT"
-DEC0, DEC1 = 18, 6
-FEE_PIPS = 100        # 0.01%
-TICK_SPACING = 1
+"""Constants for the study pools and event decoding.
+
+The environment variable STUDY_POOL selects the pool (default: the main study pool, weth-usdt).
+"""
+import os
+
+CONFIGS = {
+    # main study pool
+    "weth-usdt": dict(pool="0xc7bbec68d12a0d1830360f8ec58fa599ba1b0e9b", name="WETH/USDT 0.01%",
+                      token0=("WETH", "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2", 18),
+                      token1=("USDT", "0xdac17f958d2ee523a2206206994597c13d831ec7", 6), fee=100, spacing=1),
+    # memecoin extension: the most-sandwiched v3 pool on 2026-10-07 (scripts/probe_all_pools.py)
+    "simd-weth": dict(pool="0x7c0cfa93c65733bf2034900fdc672673c4fa4e71", name="SIMD/WETH 0.01%",
+                      token0=("SIMD", "0xb6026518463ec80f1cb33e4318e802487c27f995", 18),
+                      token1=("WETH", "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2", 18), fee=100, spacing=1),
+}
+KEY = os.environ.get("STUDY_POOL", "weth-usdt")
+CFG = CONFIGS[KEY]
+POOL, NAME = CFG["pool"], CFG["name"]
+(TOKEN0, TOKEN0_ADDR, DEC0), (TOKEN1, TOKEN1_ADDR, DEC1) = CFG["token0"], CFG["token1"]
+FEE_PIPS = CFG["fee"]
+TICK_SPACING = CFG["spacing"]
+WETH_ADDR = "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"
 WEEK = (26122440, 26172657)  # 2026-10-05 00:00:00 .. 2026-10-11 23:59:59 UTC
 
 T_SWAP = "0xc42079f94a6350d7e6235f29174924f928cc2ac818eb64fed8004e115fbcca67"

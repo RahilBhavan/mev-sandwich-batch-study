@@ -8,7 +8,7 @@ Methods note, 17 October 2026. All numbers come from `results/` and are reproduc
 
 **Answer.**
 - **The attacks.** From 5 to 11 October 2026 the pool had 70,669 swaps. 236 sandwiches hit 244 victims, who lost **$12,387** against what they would have received with no front-run.
-- **Who profits.** Attackers grossed $8,713 on the pool and paid at least $5,703 of it, 65%, as gas. Most of that goes to block builders as priority fees.
+- **Who profits.** Attackers grossed $8,713 on the pool and paid at least $4,400 of it, 50%, as gas charged to this pool. Most of that goes to block builders as priority fees.
 - **The attack under the mechanism.** Replayed through the mechanism, no sandwich makes money for its attacker. All 236 lose money in arrival order, and the best case across every ordering and variant is exactly $0.
 - **The victims.** If attackers stop because the attack no longer pays, victims recover essentially 100% of the loss. If the identical orders were submitted anyway, they recover 52% to 99% depending on assumptions, with a central estimate of 75%.
 
@@ -17,7 +17,7 @@ Methods note, 17 October 2026. All numbers come from `results/` and are reproduc
 ## Data
 
 - **Pool.** Uniswap v3 WETH/USDT, 0.01% fee, `0xc7bBeC68d12a0d1830360F8Ec58fA599bA1b0e9b`.
-- **Selection.** Chosen from a one-day scan of nine popular pools (`docs/pool-selection.md`). It was the busiest and the only one with regular sandwiches.
+- **Selection.** Chosen from a one-day scan of nine popular pools (`docs/pool-selection.md`). It was the busiest of those nine and the only one with regular sandwiches. A later scan of every pool on 7 October showed the list missed v3 USDC/WETH 0.01%, which has about 2.4 times the swaps and is sandwiched about as often. So the study pool is the busiest *WETH/USDT* pool, not the busiest pool overall. The pattern is by fee tier: both 0.01% blue-chip pools are sandwiched about 40 times a day, while their 0.05% pools almost never are.
 - **Week.** Monday 5 to Sunday 11 October 2026 UTC: blocks 26,122,440–26,172,657.
 - **What was pulled.** Swap, Mint and Burn logs, every transaction that touched the pool (sender, target, input data; 69,058 transactions), and the pool's starting state at block 26,122,439. The starting state is `slot0`, `liquidity`, and the 248 initialized ticks within 2,000 ticks of any price the week reached.
 - **Source.** The free archive endpoint `rpc.mevblocker.io`, pulled on 17 October 2026.
@@ -71,7 +71,10 @@ The rule is in `mev/detect.py`; it follows Qin, Zhou and Gervais (S&P 2022) and 
 
 The check found the just-in-time liquidity pattern and the builder bribes. Both are now handled or stated (see (b)).
 
-**Not done.** A Dune spellbook cross-check was skipped. The query and comparison script are in `docs/dune/` and `scripts/compare_dune.py`.
+**Dune's rule, re-implemented.** The public spellbook macros were run locally on the same logs (`scripts/dune_rule.py`, `results/dune-rule-replication.md`).
+- Dune's rule confirms 235 of the study's 236 sandwich blocks (99.6%), and 242 of its 244 victims.
+- It flags 20 more blocks, all of which fail the study's 90–110% amount check, so the headline count is conservative.
+- No Dune account was used; a run of `docs/dune/sandwiches.sql` on Dune itself remains possible.
 
 ## Loss measures
 
@@ -81,7 +84,7 @@ The check found the just-in-time liquidity pattern and the builder bribes. Both 
   - The largest single loss was $1,714, on a $17,637 sale that had no minimum output.
 - **(b) Attacker gross.** Every WETH and USDT transfer between the pool and the attacker's two transactions, valued at the starting price: $8,713.
   - This includes just-in-time liquidity. In 37 sandwiches the attacker also adds liquidity in the front-run and removes it, with fees, in the back-run.
-  - Gas from receipts: $5,703.
+  - Gas from receipts: $4,400. When a leg also trades in other pools, only this pool's share of its swaps is charged here.
   - Payments to builders by internal ETH transfer need traces and are not counted. Etherscan shows them (for example, 0.251 ETH to Titan Builder in block 26164108). So (b) net of gas is an upper bound on what attackers kept.
 - **(c) Slippage tolerance available.** The no-attack output minus the victim's own minimum output, from decoded router input data.
   - Defined for 115 victims, whose tolerance totalled $1,582.
@@ -128,6 +131,19 @@ When the back-run has no limit, it joins the opposite side and is matched agains
 **Two further results.**
 - Phase-1 gains beyond the sandwich loss totalled only $25.60. These blocks have little opposite-side flow.
 - Partial fills were rare: one victim filled less than fully (82.8%) in the arrival-order run.
+
+## Extension: a memecoin pool (SIMD/WETH 0.01%)
+
+The same pipeline, unchanged except for the pool configuration (`STUDY_POOL=simd-weth`), was run on the most-sandwiched v3 pool of 7 October: SIMD/WETH 0.01% (`0x7c0cfa93c65733bf2034900fdc672673c4fa4e71`). Results are in `results/simd-weth/`.
+
+- **Pool lifetime.** The pool was created on 6 October at block 26,133,397, during the week. Its state was rebuilt from its `Initialize` event and every later Mint and Burn. All 13,052 swaps replay exactly.
+- **Sandwiches and losses.** 240 sandwiches hit 242 victims (237 at the strict ±1% match), who lost **$1,330** on $29,318 of volume. The median victim lost $2.92.
+- **One victim dominates.** 199 of the 242 victims are a single automated buyer: an EIP-7702 smart account (`0x2786ed4c…`), sent by one relayer. It bought SIMD 199 times, at a median $70 per trade, and lost a median $3.48 each time, about 5%. That account carries 95% of the pool's loss. Only 19 distinct senders were sandwiched in the week.
+- **Attackers.** Gross on this pool was $1,190, against $2,160 of gas charged to it. The two largest attackers are jaredfromsubway.eth (87) and `0x1111…3911` (86).
+- **Under the mechanism.** No attack makes money in any run. Victims keep 73% of their loss on average across random tie-breaks (5th–95th percentile 69–78%), 50% in arrival order and 98% with the attacker's legs unlimited. They keep 100% if attackers stop.
+- **Checks.** Dune's rule, re-implemented locally, confirms all 240 sandwich blocks and flags 4 more. Limits decode for 16 victims; the automated buyer's smart-account calls do not decode, so its limits use the executed price.
+
+So the memecoin pool has about as many sandwiches as the blue-chip pool but one-ninth the dollar loss, almost all of it from one bot that keeps trading with loose slippage. The mechanism's effect is almost the same in both pools.
 
 ## Limits
 

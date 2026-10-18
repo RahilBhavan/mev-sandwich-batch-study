@@ -120,6 +120,7 @@ Rules from the literature:
   - The rest were on long-tail pools, mostly v4 and memecoin pools.
   - Two EOAs made 48% of the hits.
 - **One-day scan of nine candidate pools:** see `docs/pool-selection.md`.
+- **Correction (2026-10-18):** the four-hour probe did not separate v3 USDC/WETH 0.01%, and the nine-pool list left it out. A full scan of 7 October shows it is the busiest v3 pool and is sandwiched about as often as the study pool (`docs/pool-selection.md`, correction section). Sandwiches concentrate in 0.01% fee tiers, not just in long-tail pools.
 
 **Sanity figures.** EigenPhi via [Cointelegraph (Dec 2025)](https://cointelegraph.com/research/exclusive-data-from-eigenphi-reveals-that-sandwich-attacks-on-ethereum-have-waned) reports:
 

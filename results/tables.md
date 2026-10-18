@@ -2,9 +2,9 @@
 
 | Detection tier | Sandwiches | Victims | Victim volume | Victim loss (a) | Attacker gross (b) | Attacker gas | Median loss per victim |
 |---|---:|---:|---:|---:|---:|---:|---:|
-| All detected (back-run 90–110% of front-run) | 236 | 244 | $576,836 | $12,387 | $8,713 | $5,703 | $14.13 |
-| Strict amount match (±1%) | 193 | 199 | $462,210 | $10,428 | $7,166 | $4,079 | $14.13 |
-| Strict, single-pool front-run, same EOA | 178 | 183 | $425,710 | $10,043 | $6,899 | $3,733 | $14.40 |
+| All detected (back-run 90–110% of front-run) | 236 | 244 | $576,836 | $12,387 | $8,713 | $4,400 | $14.13 |
+| Strict amount match (±1%) | 193 | 199 | $462,210 | $10,428 | $7,166 | $3,673 | $14.13 |
+| Strict, single-pool front-run, same EOA | 178 | 183 | $425,710 | $10,043 | $6,899 | $3,577 | $14.40 |
 
 Loss measure (c), slippage tolerance available to the attacker, is defined for the 115 victims whose router calldata decodes with a non-zero bound: their tolerance totalled $1,582 and the attackers took $1,544 of it (98%); the median victim lost 100% of their own tolerance. 29 decoded victims set no minimum at all.
 

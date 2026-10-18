@@ -35,8 +35,25 @@ def eth_call(to, data, block):
 
 
 # starting state at block a-1: slot0, liquidity and every initialized tick in the week's price range +/- margin
+T_INIT = "0x98636036cb66a9c19a37435efc1e90142190214e8abeb821bdba3f2990dd4c95"  # Initialize(uint160,int24)
+
+
 def init_state(swaps, a):
     pre = a - 1
+    if rpc.call("eth_getCode", [POOL, hex(pre)]) in ("0x", "0x0"):
+        # the pool was created during the week: start from its Initialize event, with no liquidity and no
+        # ticks; every later Mint/Burn is in the ingested logs, so the replay rebuilds the tick data exactly
+        b = WEEK[1]
+        for s0 in range(a, b + 1, CHUNK):
+            lg = rpc.call("eth_getLogs", [{"address": POOL, "fromBlock": hex(s0),
+                                           "toBlock": hex(min(s0 + CHUNK - 1, b)), "topics": [T_INIT]}])
+            if lg:
+                w = lg[0]["data"][2:]
+                tick = int(w[64:128], 16)
+                tick = tick - (1 << 256) if tick >= 1 << 255 else tick
+                return dict(block=int(lg[0]["blockNumber"], 16), created_in_week=True,
+                            sqrtPriceX96=str(int(w[:64], 16)), tick=tick, liquidity="0", ticks={})
+        raise RuntimeError("pool has no code before the week and no Initialize event in it")
     s0 = eth_call(POOL, "0x3850c7bd", pre)            # slot0()
     L = int(eth_call(POOL, "0x1a686502", pre), 16)    # liquidity()
     sqrtp, tick = int(s0[2:66], 16), int(s0[66:130], 16)

@@ -1,0 +1,1 @@
+`index.html` embeds Anton and IBM Plex Sans (Regular, SemiBold). Both are licensed under the SIL Open Font License 1.1, whose texts are in this folder (`LICENSE.txt` for IBM Plex Sans, `Anton-LICENSE.txt` for Anton); `SOURCES.md` records where the files came from. The fonts are not covered by the repository's MIT license.

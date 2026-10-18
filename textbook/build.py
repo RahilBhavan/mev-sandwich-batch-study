@@ -421,12 +421,12 @@ chapter("ethereum", "1", "Blocks, ordering and who sees your trade", f"""
 {why("A sandwich only works because someone controls the order of transactions inside a block. You need to explain who that is.")}
 <p>A transaction is a signed instruction, for example "swap 20,000 USDC for ETH, and revert if I get less than 8.8 ETH". Ethereum groups transactions into a <strong>block</strong> every 12 seconds. Inside a block the transactions run one after another, so their <strong>order</strong> decides what price each swap gets.</p>
 <p>Today the order is chosen by a <strong>builder</strong>. Builders compete to give the block <strong>proposer</strong> (a validator) the most valuable block. <strong>Searchers</strong> are bots that watch pending transactions and send the builder a <strong>bundle</strong>: their own transactions in a fixed order, plus a tip. The tip can be a priority fee or a direct ETH transfer to the builder. Profit that comes from choosing, inserting or reordering transactions is called <strong>MEV</strong> (maximal extractable value). A sandwich is one kind of MEV.</p>
-<p>A transaction sent to the <strong>public mempool</strong> is visible to every searcher before it is mined. A transaction sent through a <strong>private RPC</strong> goes only to selected builders. That is one reason why the biggest pools now see few sandwiches: much of their flow is private.</p>
+<p>A transaction sent to the <strong>public mempool</strong> is visible to every searcher before it is mined. A transaction sent through a <strong>private RPC</strong> goes only to selected builders. Private flow is one reason some big pools see few sandwiches. The fee tier is another: on 7 October the 0.01% USDC/WETH and WETH/USDT pools were each sandwiched about 40 times, while their 0.05% pools were sandwiched 2–3 times.</p>
 {fig("f-path", "transaction path", d_tx_path(), "A swap from the public mempool can be seen by a searcher. The searcher pays the builder to put its front-run and back-run on each side of the swap in the same block.")}
 <p><strong>In this study:</strong> {S['sandwiches']} sandwiches, mostly built by Titan, BuilderNet, Quasar and Eureka. The top attacker, <em>jaredfromsubway.eth</em>, ran {jared} of them. Attackers paid at least {usd(S['attacker_gas_usd'])} in fees, {pct(gas_share)} of what they took from the pool. Etherscan also shows direct ETH tips to builders, which receipts do not show.</p>
 {breath("Ethereum runs a block's transactions in order, and builders choose that order, so whoever pays the builder can put trades on both sides of yours.")}
 {check(("Why can the attacker be sure its back-run comes right after the victim?", "It sends the front-run, the victim's transaction and the back-run to the builder as one bundle with a fixed order. The builder includes the bundle as a unit or not at all."),
-       ("Why might a big pool show almost no sandwiches?", "Most of its order flow goes through private RPCs or aggregators that protect it, so searchers never see the swap before it is mined. In this study the main USDC/WETH pool had 13 in the same week."),
+       ("Why might a big pool show almost no sandwiches?", "Much of its order flow is private, and a higher fee tier makes both attack legs more expensive. The USDC/WETH 0.05% pool had 13 sandwiches in the week; the 0.01% pools of the same pairs had about 40 a day."),
        ("What does an attacker's gas figure miss?", "Direct ETH transfers to the builder inside the transaction (for example 0.251 ETH to Titan Builder in block 26,164,108). Those need traces, so the study's gas number is a lower bound on what attackers paid."))}
 """)
 
@@ -487,7 +487,8 @@ chapter("detect", "5", "Finding sandwiches in the data", f"""
 <tr><td>Strict amount match (±1%)</td><td>193</td><td>$10,428</td></tr>
 <tr><td>Strict, single-pool front-run, same sender</td><td>178</td><td>$10,043</td></tr></tbody></table>
 <p><strong>How it was checked.</strong> The evidence for 30 random hits was read row by row: each leg's full receipt, how many senders use each contract, and ENS names resolved on chain. 25 were textbook sandwiches, 3 were losing attempts, and 2 had front-runs that also traded in other pools. Then 15 Etherscan pages were read for 5 hits. All 5 are sandwiches, and the attacker contracts carry Etherscan's "MEV Bot" tags. The check also found the JIT pattern.</p>
-<p><strong>What it misses:</strong> sandwiches that span two blocks or several pools, and attacks on private flow whose cause cannot be seen. A Dune cross-check was skipped by choice.</p>
+<p><strong>Dune's rule, re-implemented.</strong> Dune's public spellbook rule (same sender, no amount check) was run locally on the same logs. It confirms 235 of the 236 sandwich blocks and flags 20 more, all with back-run amounts outside the 90–110% window. So the headline count is conservative. No Dune account was used.</p>
+<p><strong>What it misses:</strong> sandwiches that span two blocks or several pools, and attacks on private flow whose cause cannot be seen.</p>
 {breath("A sandwich is the same attacker trading both ways in one block around a victim, with the back-run undoing the front-run, and the result holds in its strictest tier.")}
 {check(("Why require the back-run to sell 90–110% of what the front-run bought?", "It separates an attacker closing its position from two unrelated trades by a bot that trades both ways all day."),
        ("Why report three tiers?", "So the headline doesn't depend on one threshold. The strictest tier still has 178 sandwiches and $10,043 of loss."),
@@ -591,7 +592,10 @@ chapter("results", "11", "What the study found, and how to say it", f"""
 <tr><td>Loss kept by victims: deterred</td><td>{pct(S['prevented_share_deterred'])}</td></tr>
 <tr><td>Same orders, random tie-break (5th–95th percentile)</td><td>{pct(S['prevented_share_static_random_mean'])} ({pct(S['prevented_share_static_random_p5'])}–{pct(S['prevented_share_static_random_p95'])})</td></tr>
 <tr><td>Same orders, arrival order (lowest variant)</td><td>{pct(S['prevented_share_static_arrival'])}</td></tr>
-<tr><td>Control pool USDC/WETH 0.05%, same week</td><td>13 sandwiches</td></tr></tbody></table>
+<tr><td>Control pool USDC/WETH 0.05%, same week</td><td>13 sandwiches</td></tr>
+<tr><td>Dune's rule (local) confirms our sandwich blocks</td><td>99.6%</td></tr>
+<tr><td>Memecoin pool SIMD/WETH 0.01%: sandwiches / loss / kept with same orders</td><td>240 / $1,330 / 73%</td></tr></tbody></table>
+<p>The memecoin pool (created on 6 October) has as many sandwiches but one-ninth the loss, and 95% of that loss is one automated buyer that kept trading with loose slippage. The mechanism's effect is almost the same in both pools.</p>
 <h3>The paragraph</h3>
 <p class="quote">"One week of Uniswap v3's busiest WETH/USDT pool, 70,669 swaps, replayed with exact integer math: 236 sandwiches cost 244 traders $12.4k, and attackers took 98% of the slippage those traders allowed. Under your two-phase mechanism none of those attacks makes money. With the same orders, victims keep 75% of their loss on average, and all of it if attackers stop."</p>
 <p class="meta">Describe your own role accurately when you say this, including the AI assistance in building the study.</p>
@@ -607,7 +611,8 @@ chapter("results", "11", "What the study found, and how to say it", f"""
 """)
 
 QA = [
-    ("Why this pool?", "It was the busiest of nine popular pools scanned and the only one with regular sandwiches. The main USDC/WETH pool had 13 that week."),
+    ("Why this pool?", "It is the busiest WETH/USDT pool and was the only regularly sandwiched pool in the first nine-pool scan. A later all-pool scan showed that list missed USDC/WETH 0.01%, which is busier and sandwiched about as often, so the fair claim is “the busiest WETH/USDT pool”. The pattern is the 0.01% fee tier."),
+    ("Does it hold outside blue chips?", "On the most-sandwiched memecoin pool that week (SIMD/WETH 0.01%): 240 sandwiches, $1,330 lost, 95% of it by one automated buyer, and victims keep 73% under the mechanism on average. Same mechanism effect, much smaller dollars."),
     ("How do you know they are sandwiches?", "A published rule, three robustness tiers, evidence for 30 random hits, and 5 hits checked on Etherscan. All held up; the strictest tier still has 178 sandwiches."),
     ("Isn't “attacker net ≤ 0” just your Theorem 3.1?", "Yes, and it checks the implementation rather than adding a new result. The new parts are the victim numbers, the 98% tolerance finding and the range of protection on real order flow."),
     ("Why not 100% with the same orders?", "Phase 2 still lets an order ahead of the victim move the price. With the attacker's executed prices as limits the back-run is dropped and half the front-run still trades. Random tie-breaking raises the share to 75%."),

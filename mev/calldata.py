@@ -7,9 +7,10 @@ where amount is the specified amount, bound is amountOutMinimum (exact in) or am
 Multi-hop paths through the pool are returned with multihop=True: their bound covers the whole path,
 so it cannot be attributed to this pool's hop.
 """
+from mev.pool import FEE_PIPS as FEE, TOKEN0_ADDR, TOKEN1_ADDR
+
 WETH = "c02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"
-USDT = "dac17f958d2ee523a2206206994597c13d831ec7"
-FEE = 100
+T0, T1 = TOKEN0_ADDR[2:], TOKEN1_ADDR[2:]
 CONTRACT_BALANCE = 1 << 255
 
 UR_EXEC = ("3593564c", "24856bc3")  # execute(bytes,bytes[],uint256), execute(bytes,bytes[])
@@ -45,7 +46,7 @@ def _path(p):
 
 
 def _is_pool(a, fee, b):
-    return fee == FEE and {a, b} == {WETH, USDT}
+    return fee == FEE and {a, b} == {T0, T1}
 
 
 def _from_path(path, exact_in, amount, bound):
@@ -191,7 +192,7 @@ def decode_embedded(input_hex):
 
 def route_bound(input_hex, paid, got, z4o):
     """Minimum output for an exact-input route, from an aggregator call at the top level or embedded."""
-    out_token = USDT if z4o else WETH
+    out_token = T1 if z4o else T0
     try:
         c = bytes.fromhex(input_hex[2:])
     except ValueError:

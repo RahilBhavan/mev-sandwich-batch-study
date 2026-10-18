@@ -21,8 +21,8 @@ from mev.pool import FEE_PIPS, POOL, T_SWAP, WEEK
 
 V2_SWAP = "0xd78ad95fa46c994b6551d0da85fc275fe613ce37657fb8d5e3d130840159d822"
 T_TRANSFER = "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef"
-WETH_ADDR = "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"
-USDT_ADDR = "0xdac17f958d2ee523a2206206994597c13d831ec7"
+from mev.pool import TOKEN0, TOKEN0_ADDR, TOKEN1_ADDR, NAME
+from mev.prices import eth_usd, usd_per_raw
 V4_SWAP = "0x40e9cecb9f5f1f1c5b9c97dec2917b7ee92e57ba5563708daca94dd84ad7112f"
 
 ARGS = [x for x in sys.argv[1:] if not x.startswith("--")]
@@ -140,8 +140,11 @@ def gain(sp, r, base_paid, base_got):
     return phi * base_paid - Fraction(r["paid"]), sp["z4o"]
 
 
-def usd(x, is0, r0):
-    return float(Fraction(x) * (r0 if is0 else 1)) / 1e6
+RATE = {}  # USD per raw unit of token0 / token1 for the block being analysed
+
+
+def usd(x, is0, r0=None):
+    return float(Fraction(x)) * RATE[0 if is0 else 1]
 
 
 # -- chain metadata for attacker gas and builders ---------------------------------------------------
@@ -209,6 +212,9 @@ def main():
     for b in blocks:
         snap, be = snaps[b], bev[b]
         r0 = mechanism.r0_of(snap)
+        RATE[1] = usd_per_raw(TOKEN1_ADDR, b)
+        RATE[0] = usd_per_raw(TOKEN0_ADDR, b, r0) if TOKEN0_ADDR != "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2" \
+            else eth_usd(b) / 1e18
         bswaps = [e for e in be if e["kind"] == "swap" and (e["amount0"] or e["amount1"])]
         specs = specs_for_block(bswaps, txs, modes, single_route)
         sid = {s["id"]: s for s in specs}
@@ -245,15 +251,20 @@ def main():
                     if not lg["topics"] or lg["topics"][0] != T_TRANSFER or len(lg["topics"]) < 3:
                         continue
                     tok = lg["address"].lower()
-                    if tok not in (WETH_ADDR, USDT_ADDR):
+                    if tok not in (TOKEN0_ADDR, TOKEN1_ADDR):
                         continue
                     amt = int(lg["data"], 16)
                     src, dst = "0x" + lg["topics"][1][-40:], "0x" + lg["topics"][2][-40:]
                     sign = 1 if src == POOL else -1 if dst == POOL else 0
-                    act += sign * usd(amt, tok == WETH_ADDR, r0)
+                    act += sign * usd(amt, tok == TOKEN0_ADDR, r0)
             jit = any(e["kind"] != "swap" and e["tx"] in (x["front"], x["back"]) for e in be)
-            gas = sum(int(rc[h]["gasUsed"], 16) * int(rc[h]["effectiveGasPrice"], 16) for h in (x["front"], x["back"]))
-            gas_usd = gas * float(r0) / 1e6   # wei of ETH valued at the WETH price
+            def pool_share(r):
+                """Share of a leg's gas charged to this pool: its swaps on the pool / all its swaps."""
+                ss = [lg["address"].lower() for lg in r["logs"] if lg["topics"] and lg["topics"][0] in swap_topics]
+                return sum(1 for a in ss if a == POOL) / len(ss) if ss else 1.0
+            gas = sum(int(rc[h]["gasUsed"], 16) * int(rc[h]["effectiveGasPrice"], 16) * pool_share(rc[h])
+                      for h in (x["front"], x["back"]))
+            gas_usd = gas * eth_usd(b) / 1e18   # gas is paid in ETH
             h = hd[str(b)]
             mech_runs = [atk_net(r, x) for r in runs + au_runs + [unl, fee1, au]]
             vloss = vprev = vdet = 0.0
@@ -297,7 +308,7 @@ def main():
                 vprev += min(max(ga, 0), la) if la > 0 else 0
                 vdet += min(max(gr, 0), la) if la > 0 else 0
                 vic_rows.append(dict(
-                    block=b, victim_tx=vt, front=x["front"], back=x["back"], direction="sell WETH" if vs[0]["z4o"] else "buy WETH",
+                    block=b, victim_tx=vt, front=x["front"], back=x["back"], direction=f"sell {TOKEN0}" if vs[0]["z4o"] else f"buy {TOKEN0}",
                     exact_in=all(s["exact_in"] for s in vs), limit_src="+".join(srcs),
                     victim_volume_usd=round(sum(usd(s["paid"], s["z4o"], r0) for s in vs), 2),
                     loss_a_usd=round(la, 4), slippage_slack_c_usd=round(slack, 4) if slack else "",
@@ -337,7 +348,7 @@ def main():
         return round(sum(min(max(r[col], 0), r["loss_a_usd"]) for r in pos) / loss, 4) if loss > 0 else None
 
     summary = dict(
-        block_range=list(WEEK), rpc=rpc.ENDPOINTS[0], swaps=len(swaps), swap_txs=len({s["tx"] for s in swaps}),
+        pool=POOL, pool_name=NAME, block_range=list(WEEK), rpc=rpc.ENDPOINTS[0], swaps=len(swaps), swap_txs=len({s["tx"] for s in swaps}),
         sandwiches=len(sw_rows), sandwiches_strict=strict_n, victims=len(vic_rows), victims_with_positive_loss=len(pos),
         victim_volume_usd=round(tot(vic_rows, "victim_volume_usd"), 2),
         loss_a_usd=round(loss, 2),

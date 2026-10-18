@@ -39,3 +39,20 @@ USDC/WETH 0.05% serves as a **control**. Zero sandwiches there is a finding: pri
 - **Chosen pool, full detector** (`scripts/analyze.py`): 70,669 swaps, **236 sandwiches**, 244 victims (193 at the strict ±1% match). That is about three times the one-day projection: the 17 October scan day was quieter, and the full detector merges a transaction's swaps into one leg.
 - **Control, USDC/WETH 0.05%, scan detector** (`scripts/scan_pools.py`, via eth.drpc.org in 100-block chunks because rpc.mevblocker.io was rate-limited by the parallel ingest): 51,029 swaps, 13 sandwiches, 20 victims, plus 7 outside the 90–110% amount window. Output: `data/scan/control-week.out`.
 - **Spot checks:** 30 random hits reviewed from on-chain evidence in place of 5 Etherscan views (`results/precision-review.md`). A human Etherscan check of five is still open.
+
+## Correction (2026-10-18): the nine-pool scan missed the busiest v3 pool
+
+A scan of **every** Uniswap v2/v3/v4 pool on Wednesday 7 October (blocks 26,136,840–26,144,039; `scripts/probe_all_pools.py`, `data/probe-week-day3/`) found a pool the original nine-candidate list left out: **v3 USDC/WETH 0.01%** (`0xe0554a476a092703abdb3ef35c80e0d76d32939f`). It is the busiest v3 pool, with more than twice the study pool's swaps, and it is sandwiched about as often.
+
+| Pool, 7 Oct 2026 | Swaps | Sandwiches (same-sender rule) | Within 90–110% amount match |
+|---|---:|---:|---:|
+| v3 USDC/WETH 0.01% (missed) | 24,012 | 43 | 32 |
+| **v3 WETH/USDT 0.01% (study pool)** | 10,150 | 42 | 39 |
+| v3 USDC/WETH 0.05% (control) | 7,885 | 3 | 2 |
+| v3 WETH/USDT 0.05% | 2,980 | 2 | 1 |
+| v3 SIMD/WETH 0.01% (memecoin extension) | 2,674 | 44 | 44 |
+
+What changes:
+- **"Blue-chip pools see almost no sandwiches" is wrong as stated.** The pattern is by fee tier. Both blue-chip 0.01% pools are sandwiched about 40 times a day; the 0.05% and 0.30% pools of the same pairs almost never. A 1-basis-point fee makes the attacker's two legs cheap. This is consistent with fees acting as a sandwich cost, but this scan does not test that cause.
+- **The study pool is still "the busiest WETH/USDT pool"**, but not the busiest pool overall. Outreach copy must say "WETH/USDT", not "the busiest pool".
+- The study's results for WETH/USDT 0.01% are unaffected. USDC/WETH 0.01% would be a natural replication.

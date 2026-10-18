@@ -11,6 +11,9 @@ import sys
 
 import matplotlib
 
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from mev.pool import NAME, POOL  # noqa: E402
+
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
@@ -23,7 +26,7 @@ def num(x):
 
 def tier(e):
     """Robustness tiers from the evidence sheet (scripts/inspect_hits.py)."""
-    single = all(p == "0xc7bbec68" for p in e["front_pools"].split("|"))
+    single = all(p == POOL[:10] for p in e["front_pools"].split("|"))
     strict = 0.99 <= float(e["ratio"]) <= 1.01
     return dict(all=True, strict=strict, core=strict and single and e["same_eoa"] == "True")
 
@@ -39,7 +42,7 @@ def main():
     out = []
     w = out.append
 
-    w("## Table 1. Sandwiches and victim losses, Uniswap v3 WETH/USDT 0.01%, 2026-10-05 to 2026-10-11 UTC\n")
+    w(f"## Table 1. Sandwiches and victim losses, Uniswap v3 {NAME}, 2026-10-05 to 2026-10-11 UTC\n")
     w("| Detection tier | Sandwiches | Victims | Victim volume | Victim loss (a) | Attacker gross (b) | Attacker gas | Median loss per victim |")
     w("|---|---:|---:|---:|---:|---:|---:|---:|")
     for k, label in names:
@@ -127,12 +130,13 @@ def main():
     ax.text(n + 3, cum_sq[-1], f"Status quo  ${cum_sq[-1]:,.0f}", va="center", color=INK, fontsize=13)
     ax.text(n + 3, cum_m[-1], f"Same orders under\nper-block clearing  ${cum_m[-1]:,.0f}", va="center", color=ACC,
             fontsize=13, fontweight="bold")
-    ax.text(n + 3, 350, "Attackers stop\n(no attack profits)  ≈ $0", va="center", color=TXT2, fontsize=12)
+    ax.text(n + 3, cum_sq[-1] * 0.03, "Attackers stop\n(no attack profits)  ≈ $0", va="center", color=TXT2, fontsize=12)
     ax.set_xlim(0, n)
     ax.set_ylim(0, cum_sq[-1] * 1.04)
     ax.set_xlabel(f"Sandwiches, ranked by victim loss (n = {n})", color=INK)
     ax.set_ylabel("Cumulative victim loss (USD)", color=INK)
-    ax.yaxis.set_major_formatter(matplotlib.ticker.FuncFormatter(lambda v, _: f"${v / 1000:.0f}k" if v else "$0"))
+    ax.yaxis.set_major_formatter(matplotlib.ticker.FuncFormatter(
+        lambda v, _: "$0" if not v else (f"${v / 1000:.0f}k" if cum_sq[-1] >= 5000 else f"${v:,.0f}")))
     for sp in ("top", "right"):
         ax.spines[sp].set_visible(False)
     for sp in ("left", "bottom"):
@@ -141,10 +145,10 @@ def main():
     fig.suptitle(f"Per-block clearing cuts a week's ${cum_sq[-1] / 1000:,.1f}k sandwich loss\n"
                  f"to ${cum_m[-1] / 1000:,.1f}k with the same orders, and no attack makes money",
                  x=0.03, y=0.975, ha="left", va="top", fontsize=17, fontweight="bold", color=INK, linespacing=1.25)
-    fig.text(0.03, 0.835, f"Uniswap v3 WETH/USDT 0.01%, 5–11 Oct 2026, {n} sandwiches. Mechanism: Chan, Wu & Shi (AFT 2025),\n"
+    fig.text(0.03, 0.835, f"Uniswap v3 {NAME}, 5–11 Oct 2026, {n} sandwiches. Mechanism: Chan, Wu & Shi (AFT 2025),\n"
              "same orders replayed, mean of 200 random tie-breaks.", ha="left", va="top", fontsize=12, color=INK)
     fig.text(0.03, 0.025, "Loss = victim's output with no front-run minus actual output, by exact Uniswap v3 re-execution.\n"
-             "Source: Ethereum logs via rpc.mevblocker.io, pulled 17 Oct 2026. Code: scripts/report.py.",
+             "Source: Ethereum logs via rpc.mevblocker.io, pulled 17–18 Oct 2026. Code: scripts/report.py.",
              ha="left", fontsize=10.5, color=TXT2)
     fig.subplots_adjust(left=0.10, right=0.70, top=0.73, bottom=0.2)
     fig.savefig(os.path.join(R, "figure.svg"))
