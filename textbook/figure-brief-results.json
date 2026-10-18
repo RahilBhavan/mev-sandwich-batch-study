@@ -1,0 +1,63 @@
+{
+  "id": "textbook-ch11-cumulative-loss",
+  "set": "mev-study-textbook",
+  "template": "rahil-design-3.x-figure",
+  "accent_meaning": "title-value",
+  "reader": "Rahil, studying before emailing and meeting Ke Wu and Michael Wellman; reads on a laptop or phone",
+  "decision": "Be able to state the headline numbers and their shape: a few sandwiches carry most of the loss, and the mechanism removes most of it",
+  "point": "Victims lost $12,387 to 236 sandwiches in one week; the same orders under per-block clearing leave $3,041, and about $0 if attackers stop.",
+  "comparison": "Status-quo cumulative victim loss against the same blocks under the Chan-Wu-Shi mechanism, and against attackers abstaining",
+  "question": "comparison",
+  "form": "step",
+  "title": "Per-block clearing cuts the week's $12,387 sandwich loss to $3,041 with the same orders",
+  "subtitle": "",
+  "caption": "Real data, 5–11 Oct 2026. Same orders under per-block clearing: mean of 200 random tie-breaks. The 20 largest sandwiches carry 64% of the loss.",
+  "values_count": 236,
+  "shape_reason": "The cumulative shape shows the concentration: the first 20 sandwiches carry about two thirds of the loss",
+  "encodings": [
+    {
+      "mark": "step",
+      "baseline": 0,
+      "axis_min": 0,
+      "axis_min_labeled": true,
+      "scale": "linear",
+      "scale_labeled": true,
+      "series": 3
+    }
+  ],
+  "accents": 1,
+  "estimates": {
+    "present": true,
+    "labeled": true,
+    "treatment": "dashed"
+  },
+  "illustration": false,
+  "sources": [
+    {
+      "title": "Study results (results/victims.csv), blocks 26,122,440-26,172,657 via rpc.mevblocker.io",
+      "url": "https://github.com/RahilBhavan/mev-sandwich-batch-study",
+      "as_of": "2026-10-17"
+    }
+  ],
+  "alt": "Step chart of cumulative victim loss across 236 sandwiches ranked by loss. The status-quo line rises steeply over the first 20 and ends at $12,387; the same orders under per-block clearing end at $3,041; a dashed line at zero marks attackers stopping.",
+  "sizes_checked": [
+    "1440x1000 page",
+    "390x844 page (figure scrolls sideways)"
+  ],
+  "feed_width_viewed": true,
+  "min_label_px": 16,
+  "point_px": 96,
+  "contrast_min": 5.93,
+  "measured_by": "inspect_render",
+  "five_second_test": {
+    "by": "agent",
+    "date": "2026-10-18",
+    "said": "status quo $12.4k; mechanism $3.0k; attackers stop ~$0",
+    "result": "pass at 1440 px"
+  },
+  "verdict_allow": [],
+  "warn_reasons": {
+    "agent self-test": "Rahil reads it; this is a private study guide, not a post",
+    "the point renders": "the figure sits in a long page; its title is the chapter heading and the point is in the caption and table below"
+  }
+}

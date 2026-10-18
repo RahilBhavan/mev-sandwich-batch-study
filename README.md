@@ -34,6 +34,7 @@ Read `docs/methods.md` first. Tables are in `results/tables.md`.
   - `pool-selection.md`: pool choice and frozen week
   - `methods.md`: methods note
 - `results/`: CSVs, `summary.json`, tables, figure and its brief, and precision evidence
+- `textbook/`: a self-contained study guide (`index.html`) that teaches everything needed to explain and defend the study; built by `build.py` from the results and the tested code. Plan in `PLAN.md`, checks in `CHECKS.md`
 
 ## Reproduce
 
