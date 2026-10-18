@@ -15,7 +15,8 @@ ROOT = os.path.dirname(HERE)
 sys.path[:0] = [HERE, ROOT]
 import toy  # noqa: E402
 
-DESIGN = os.path.expanduser("~/.t3/projects/main/.agents/skills/rahil-design")
+# the rahil-design bundle (fonts, tokens, components); set RAHIL_DESIGN to its folder to rebuild elsewhere
+DESIGN = os.environ.get("RAHIL_DESIGN", os.path.expanduser("~/.t3/projects/main/.agents/skills/rahil-design"))
 E, U = toy.E, toy.U
 
 S = json.load(open(os.path.join(ROOT, "results", "summary.json")))
