@@ -71,7 +71,7 @@ The rule is in `mev/detect.py`; it follows Qin, Zhou and Gervais (S&P 2022) and 
 
 The check found the just-in-time liquidity pattern and the builder bribes. Both are now handled or stated (see (b)).
 
-**Not done.** A Dune cross-check needs a trial account; the query and comparison script are in `docs/dune/`.
+**Not done.** A Dune spellbook cross-check was skipped. The query and comparison script are in `docs/dune/` and `scripts/compare_dune.py`.
 
 ## Loss measures
 
