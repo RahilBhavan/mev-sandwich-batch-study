@@ -1,6 +1,6 @@
 # Sandwich losses on one Uniswap pool, and what per-block two-phase clearing would have prevented
 
-Methods note, 17 October 2026. All numbers come from `results/` and are reproduced by `scripts/run_all.sh`.
+Methods note, 17 October 2026 (updated 18 October with the memecoin extension and the Dune-rule check). All numbers come from `results/` and are reproduced by `scripts/run_all.sh`.
 
 ## Question and answer
 
@@ -53,7 +53,7 @@ The rule is in `mev/detect.py`; it follows Qin, Zhou and Gervais (S&P 2022) and 
 | Strict ±1% amount match | 193 | $10,428 |
 | Strict, single-pool front-run, same address | 178 | $10,043 |
 
-**Precision.** I read the on-chain evidence for 30 randomly drawn hits row by row (`results/precision-review.md`):
+**Precision.** The on-chain evidence for 30 randomly drawn hits was read row by row by the AI agent that built the pipeline (`results/precision-review.md`):
 - 25 are textbook sandwiches.
 - 3 are jaredfromsubway attempts that lost money on this pool.
 - 2 have front-runs that also route through other pools.
@@ -67,7 +67,7 @@ The rule is in `mev/detect.py`; it follows Qin, Zhou and Gervais (S&P 2022) and 
 | mevrevolutionx.eth | 56 | $1,815 |
 | Third (no ENS name) | 33 | $3,719 |
 
-**Etherscan check.** I read 15 transaction pages covering 5 hits on etherscan.io. All 5 are sandwiches: the pages match the RPC data, attacker contracts carry Etherscan's MEV-bot name tags, and block positions are front-run, then victim, then back-run.
+**Etherscan check.** The agent read 15 transaction pages covering 5 hits on etherscan.io. All 5 are sandwiches: the pages match the RPC data, attacker contracts carry Etherscan's MEV-bot name tags, and block positions are front-run, then victim, then back-run.
 
 The check found the just-in-time liquidity pattern and the builder bribes. Both are now handled or stated (see (b)).
 
