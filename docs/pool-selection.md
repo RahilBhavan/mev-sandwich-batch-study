@@ -20,7 +20,7 @@
 
 - One further candidate had an amount ratio outside 90–110% and was excluded.
 - One sandwich had two victims.
-- Five attacker EOAs appear. The most frequent, `0xae2fc483…fae13` with 4 hits, is believed to be jaredfromsubway **[label unverified]**.
+- Five attacker EOAs appear. The most frequent, `0xae2fc483…fae13` with 4 hits, is jaredfromsubway.eth (verified 2026-10-17 by ENS reverse resolution on chain).
 - Ratios ranged from 0.90 to 1.00. Hits near 0.90 need manual inspection.
 
 ## Decision
@@ -33,8 +33,9 @@
 
 USDC/WETH 0.05% serves as a **control**. Zero sandwiches there is a finding: private order flow and arbitrage have largely moved those attacks elsewhere.
 
-## Before freezing
+## Frozen week (2026-10-17)
 
-- Confirm the weekly count with a 7-day count-only run on the chosen pool and the control.
-- Freeze a full Monday–Sunday UTC week of block numbers.
-- Spot-check 5 hits on Etherscan.
+- **Week:** Monday 5 October 00:00:00 to Sunday 11 October 2026 23:59:59 UTC = blocks **26,122,440–26,172,657** (50,218 blocks), found by binary search on block timestamps. Recorded in `mev/pool.py`.
+- **Chosen pool, full detector** (`scripts/analyze.py`): 70,669 swaps, **236 sandwiches**, 244 victims (193 at the strict ±1% match). That is about three times the one-day projection: the 17 October scan day was quieter, and the full detector merges a transaction's swaps into one leg.
+- **Control, USDC/WETH 0.05%, scan detector** (`scripts/scan_pools.py`, via eth.drpc.org in 100-block chunks because rpc.mevblocker.io was rate-limited by the parallel ingest): 51,029 swaps, 13 sandwiches, 20 victims, plus 7 outside the 90–110% amount window. Output: `data/scan/control-week.out`.
+- **Spot checks:** 30 random hits reviewed from on-chain evidence in place of 5 Etherscan views (`results/precision-review.md`). A human Etherscan check of five is still open.

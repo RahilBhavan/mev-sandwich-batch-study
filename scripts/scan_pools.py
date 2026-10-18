@@ -2,15 +2,16 @@
 Uniswap v2/v3 pools over a block range. Exploratory; detection rule is in
 docs/research.md (Dune-style ordering + Qin et al. amount match).
 
-usage: python scan_pools.py NBLOCKS OUT.json [END_BLOCK]
+usage: [POOLS=addr,addr] python scan_pools.py NBLOCKS OUT.json [END_BLOCK]
 """
 import collections
 import json
+import os
 import sys
 import time
 import urllib.request
 
-RPC = "https://rpc.mevblocker.io"
+RPC = os.environ.get("RPC", "https://rpc.mevblocker.io")
 V2 = "0xd78ad95fa46c994b6551d0da85fc275fe613ce37657fb8d5e3d130840159d822"
 V3 = "0xc42079f94a6350d7e6235f29174924f928cc2ac818eb64fed8004e115fbcca67"
 POOLS = {
@@ -24,7 +25,9 @@ POOLS = {
     "0x0d4a11d5eeaac28ec3f61d100daf4d40471f1852": "v2 WETH/USDT",
     "0xa43fe16908251ee70ef74718545e4fe6c5ccec9f": "v2 PEPE/WETH",
 }
-CHUNK = 1000
+if os.environ.get("POOLS"):  # comma-separated subset, e.g. POOLS=0x88e6...
+    POOLS = {p: POOLS[p] for p in os.environ["POOLS"].lower().split(",")}
+CHUNK = int(os.environ.get("CHUNK", "1000"))
 
 
 def rpc(method, params, tries=6):

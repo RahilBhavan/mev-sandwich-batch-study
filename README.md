@@ -2,12 +2,44 @@
 
 This study measures sandwich attacks on one Uniswap pool over one week. It estimates what the victims lost, then replays each block through the two-phase swap mechanism of Chan, Wu & Shi, "Mechanism Design for Automated Market Makers" (AFT 2025, [arXiv 2402.09357](https://arxiv.org/abs/2402.09357)) to estimate how much of that loss the mechanism would have prevented.
 
-Status (2026-10-17): research and pool selection. No results yet.
+## Result (5–11 October 2026, Uniswap v3 WETH/USDT 0.01%)
 
-- `docs/research.md`: the paper's mechanism, detection rules, loss measures and data access, all sourced
-- `docs/plan.md`: questions, outputs, a 10-day schedule and limits
-- `docs/pool-selection.md`: the candidate-pool scan and the chosen pool
-- `scripts/scan_pools.py`: counts same-block sandwiches on candidate pools from a free public RPC
-- `scripts/probe_all_pools.py`: 4-hour exploratory scan of all v2/v3/v4 pools
+- **Sandwiches and losses.** 70,669 swaps. 236 sandwiches hit 244 victims, who lost **$12,387** against what they would have received with no front-run. Attackers grossed $6,242 and paid 91% of it as gas.
+- **Slippage taken.** Where the victim's minimum output could be decoded, attackers took 98% of the slippage tolerance.
+- **The attack under the mechanism.** No sandwich makes money for its attacker in any run.
+- **The victims.** With the same orders replayed, victims keep 75% of their loss on average across 200 random tie-breaks (52–99% across variants). If attackers stop, they keep essentially all of it.
 
-The `data/` and `references/` folders are local only and are not tracked in git.
+![Cumulative victim loss](results/figure.png)
+
+Read `docs/methods.md` first. Tables are in `results/tables.md`.
+
+## Layout
+
+- `mev/`
+  - `v3.py`: exact Uniswap v3 swap math
+  - `mechanism.py`: the paper's Figure 1
+  - `detect.py`: sandwich detection
+  - `calldata.py`: router limit decoding
+  - `rpc.py`, `data.py`, `pool.py`: data access and pool constants
+- `scripts/`
+  - `ingest.py`, then `replay.py` (gate: 100% exact)
+  - `analyze.py`, then `inspect_hits.py`, then `report.py`
+  - `run_all.sh` runs everything
+  - `compare_dune.py`: cross-check against a Dune export of `docs/dune/sandwiches.sql`
+  - `scan_pools.py`: candidate-pool and control counts
+- `tests/`: v3 math, the detector, and the mechanism's rules and Theorem 3.1
+- `docs/`
+  - `research.md`: sources
+  - `plan.md`: plan and status
+  - `pool-selection.md`: pool choice and frozen week
+  - `methods.md`: methods note
+- `results/`: CSVs, `summary.json`, tables, figure and its brief, and precision evidence
+
+## Reproduce
+
+```bash
+uv venv .venv && uv pip install --python .venv/bin/python pyarrow matplotlib pytest
+scripts/run_all.sh
+```
+
+`data/`, `references/` and `outreach/` are local only and are not tracked in git.

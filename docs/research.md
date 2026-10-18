@@ -23,12 +23,14 @@ This is Ke Wu's only paper that batches DEX orders per block to stop front-runni
 - *Arbitrage resilience* (Def. 2, Thm 3.1). No coalition, including a block producer that inserts, drops or reorders orders, can make a risk-free profit (Remark 1).
 - *Incentive compatibility* (Def. 3, Thm 3.2). This holds only in the weak fair-sequencing model (§2.4), and the mechanism is not incentive compatible in the plain model (§3.3).
 - Orders are public: there is no encrypted mempool (§1.3).
-- My reading is that the model has no swap fee. I found no fee term in Figure 1 **[confirm on full read]**.
+- The model has no swap fee. Confirmed on a full read (2026-10-17): the only "fee" mentions in the paper are to transaction fee mechanism papers. The potential function is constant (Φ(x′, y′) = Φ(x, y)), so nothing accrues to liquidity providers.
+- Rates are always Y paid per unit of X (Definition 1). Figure 1 sizes each order in X at r0: β = v for Buy(X), −v for Sell(X), −v/r0 for Buy(Y), v/r0 for Sell(Y). Step 3a puts every minority-side order in front of the dominant side; the boundary order is split.
+- The paper gives no numerical worked example of the mechanism. Its only example (Appendix A) illustrates the preference ordering. The tests here therefore check Figure 1's rules and Theorem 3.1 directly.
 - The scope is one pool. Cross-pool interaction, all-or-nothing orders and encrypted mempools are open problems (§1.3, §5).
 
 **Empirical gap.** The paper is theory only and contains no on-chain measurement. This study supplies the measurement it leaves out.
 
-**Follow-up by others:** Li, Shi, Zhang, "A Trilemma in AMM Mechanism Design", FC'26, [arXiv 2605.27602](https://arxiv.org/abs/2605.27602). Read it before outreach; it may bound what any such mechanism can achieve.
+**Follow-up by others:** Li, Shi, Zhang, "A Trilemma in AMM Mechanism Design", [arXiv 2605.27602](https://arxiv.org/abs/2605.27602) (May 2026; Ke Wu is not an author). Of incentive compatibility (IC), weak local efficiency (wLE: no unfilled demand from orders that could have executed directly against the pool) and uniform pricing (UP), any two are achievable but not all three. Chan–Wu–Shi's mechanism gives up UP. This is why the outreach must not call it a uniform-price batch auction, and it suggests a question: how much efficiency the measured blocks lose to the IC choice (the unfilled volume this study reports).
 
 ## 2. Wellman's angle
 
@@ -40,6 +42,8 @@ This is Ke Wu's only paper that batches DEX orders per block to stop front-runni
   - His [CFTC comment](https://comments.cftc.gov/Handlers/PdfHandler.ashx?id=25238) arguing for call markets.
 - His method is agent-based simulation, such as PyMarketSim ([ICAIF 2024](https://strategicreasoning.org/wp-content/uploads/2024/10/MarketSim_ICAIF24.pdf)) and the spoofing work. A historical counterfactual replay is a natural first step toward that kind of simulation.
 - I found no joint Ke Wu–Wellman paper, student or lab.
+- **Rechecked 2026-10-17.** His 25 most recent arXiv papers (author query `au:Wellman_Michael`, newest Feb 2026) contain nothing on blockchains, MEV or AMMs. A web search also found none. The recent work is empirical game-theoretic analysis (EGTA): for example "Learning Bayesian Game Families, with Application to Mechanism Design" (Feb 2025), "Computing Perfect Bayesian Equilibria, with Application to Empirical Game-Theoretic Analysis" (Feb 2026) and an EGTA survey (2024). Note: "The Viability of Blockchain Markets under Discrete Clearing and Paid Priority" (arXiv 2605.17425) looks like his topic but is by Capponi, Cartea and Drissi.
+- **Sharper hook for Wellman:** this study's main limit is that it replays the same orders and can't say how bots and traders would respond to the mechanism. Working out that response is an empirical game, which is his method.
 
 ## 3. Data access (tested 2026-10-17)
 
@@ -89,7 +93,7 @@ Rules from the literature:
   - If the swap crosses a tick, fetch `ticks()` and `liquidityNet` for that tick by archive `eth_call` at N−1.
   - Port `TickMath` and `SwapMath` to Python integers. **Gate:** the port must reproduce every observed swap exactly before any counterfactual is trusted.
 - **(b) Attacker profit.** Back-run output minus front-run input, then net of gas. This is a lower bound on harm, because builders take most of the value.
-- **(c) Exploited slippage.** Actual output minus `amountOutMinimum` decoded from calldata.
+- **(c) Slippage tolerance available to the attacker.** The no-attack output minus `amountOutMinimum` decoded from calldata (or `amountInMaximum` minus the no-attack input). This is the most a sandwich could take from that victim. Loss (a) divided by (c) is how much of the tolerance the attacker used. Only defined where the victim's calldata decodes.
 
 ## 6. Counterfactual for the batch design
 
