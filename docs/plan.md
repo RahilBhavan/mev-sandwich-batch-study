@@ -1,8 +1,8 @@
-# Plan: sandwich losses on one Uniswap pool, and what per-block batch clearing would have prevented
+# Plan: sandwich losses on one Uniswap pool, and what per-block two-phase clearing would have prevented
 
 ## Purpose
 
-This is a short measurement study for an opening email to Ke Wu (UMich CSE) and Michael Wellman (UMich CSE). The study takes one week of swaps on one Uniswap pool and does three things:
+This is the plan for a short measurement study. It records the question, the acceptance criteria for each step and the status. The study takes one week of swaps on one Uniswap pool and does three things:
 
 1. Count the sandwich attacks.
 2. Estimate how much the victims lost.
@@ -24,13 +24,13 @@ The research inputs are in `docs/research.md`, and the pool choice is in `docs/p
 
 ## Decisions to keep explicit
 
-- **"One popular pool" and "many sandwiches" pull against each other.** Blue-chip pools now see almost no sandwiches (see research §7). `docs/pool-selection.md` records the choice and the evidence. A result near zero on a blue-chip pool is a valid finding, but it makes a weaker opener.
+- **"One popular pool" and "many sandwiches" pull against each other.** Blue-chip pools now see almost no sandwiches (see research §7). `docs/pool-selection.md` records the choice and the evidence. A result near zero on a blue-chip pool is a valid finding, but it is a weaker result.
 - **Describe the design as Ke Wu's paper does:** per-block, two-phase, arbitrage-resilient. It is not a uniform-price auction.
 - **This is a counterfactual on the same order flow.** Under a different mechanism, users and bots would behave differently. The study measures the *static* effect on observed orders, and the write-up says so.
 
 ## Status (2026-10-17)
 
-Days 1–10 are done except the items that need Rahil (marked ⧗). Results: `docs/methods.md`, `results/`.
+Days 1–10 are done. Results: `docs/methods.md`, `results/`.
 
 | Day | Status |
 |---|---|
@@ -41,7 +41,7 @@ Days 1–10 are done except the items that need Rahil (marked ⧗). Results: `do
 | 6 Loss measures | Done. (a), (b), (c) |
 | 7 Limits from input data | Done. 144 of the 160 victims whose limit is attributable to this pool (90.0%). Sources: Uniswap routers, routers nested in smart-wallet batches, and 1inch, KyberSwap, LI.FI, 0x and `0x8feab81d…` for single-pool routes. The literal target, ≥ 90% of all swaps in sandwich blocks, is unreachable by construction: 518 of the 1,182 are attackers' own legs and most of the rest are bots without public calldata (about 15% decode). The other 84 victims route through several pools, so their bounds cannot be attributed to this pool |
 | 8–9 Mechanism | Done. Attacker net ≤ 0 in every run; prevented-share table |
-| 10 Write-up | Done. Figure (present-data brief passes), methods note, two email drafts in `outreach/` (gitignored). Repo pushed privately to GitHub on 2026-10-18. Rahil reviews and sends the emails |
+| 10 Write-up | Done. Figure (present-data brief passes), methods note and README. The repository has been public on GitHub since 2026-10-18 |
 
 **Extension and risks (2026-10-18)**
 - *Free endpoint:* resolved. The week downloaded from rpc.mevblocker.io, and eth.drpc.org returned the same 70,669 swap logs.
@@ -60,7 +60,7 @@ Days 1–10 are done except the items that need Rahil (marked ⧗). Results: `do
 | 6 | Loss measures (a), (b), (c), with USD conversion at block time from the pool price. | Each sandwich has three loss numbers; totals reconcile |
 | 7 | Calldata decoding for limits (SwapRouter02, Universal Router V3_SWAP_EXACT_IN/OUT, v2 router). | Limit decoded for ≥ 90% of swaps in sandwich blocks; the rest are flagged |
 | 8–9 | Mechanism simulator: phase 1 at r0, phase 2 using v3 math with price limits, random tie-breaking with ≥ 200 draws, fee sensitivity. Unit tests use the paper's own examples and theorem checks. | Attacker net ≤ 0 in every simulated block; prevented-share table produced |
-| 10 | Figure, methods note, README, email draft. Peer check by rereading the paper's §3. | Draft email and two-page summary ready for Rahil to review |
+| 10 | Figure, methods note, README. Peer check by rereading the paper's §3. | Methods note and figure ready for Rahil to review |
 
 If the work slips, cut in this order: Universal Router decoding (fall back to the executed-price bound), then multiple random draws (use arrival order), then the second loss measure.
 
@@ -70,10 +70,3 @@ If the work slips, cut in this order: Universal Router decoding (fall back to th
 - Spot-check detection by hand, and compare with the Dune spellbook in one trial session.
 - Record each RPC used, the block range and the run date.
 - Limits to state: same-block, single-pool detection only; private-flow attacks are visible but their causes are not; no behavioural response; paper assumptions (fee-free model, partial fills, public orders) differ from Uniswap's.
-
-## Outreach (not started; needs Rahil's approval before sending)
-
-- Draft with the `outreach-email` skill once the numbers exist.
-- Lead with one sentence of measurement, then the prevented share and one question about the paper. Examples: how the guarantees carry over to concentrated liquidity, or the all-or-nothing open problem.
-- For Wellman: frame the work as the DEX version of the frequent call market versus continuous trading question from Wah & Wellman (2016).
-- Publishing the repository and sending email are separate decisions.
