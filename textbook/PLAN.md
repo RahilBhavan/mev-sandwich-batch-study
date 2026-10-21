@@ -2,7 +2,7 @@
 
 ## Reader, goal, test
 
-- **Reader:** Rahil, before emailing and meeting Ke Wu (mechanism design for AMMs) and Michael Wellman (market design, empirical game theory).
+- **Reader:** Rahil, before discussing the study with Ke Wu (mechanism design for AMMs) and Michael Wellman (market design, empirical game theory).
 - **Goal:** explain every number in `docs/methods.md` in your own words, and answer the obvious follow-up questions without reading from notes.
 - **Test of done:** for each chapter, you can answer its self-check questions with the answers hidden, and you can say the results paragraph (chapter 11) from memory.
 

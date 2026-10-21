@@ -1,56 +1,106 @@
-# MEV sandwich study: one Uniswap pool, one week, and per-block two-phase clearing
+# MEV sandwich batch study: one week of sandwich losses on Uniswap v3, replayed through per-block two-phase clearing
 
-Measures sandwich attacks on the busiest WETH/USDT Uniswap v3 pool over one week, estimates what the victims lost, then replays each block through the per-block, two-phase, arbitrage-resilient mechanism of Chan, Wu & Shi, "Mechanism Design for Automated Market Makers" (AFT 2025, [arXiv 2402.09357](https://arxiv.org/abs/2402.09357)) to estimate how much of that loss the mechanism would have prevented.
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-## Results (5–11 October 2026, Uniswap v3 WETH/USDT 0.01%)
+![Cumulative victim loss over 236 sandwiches, 5–11 Oct 2026: $12,387 in the status quo, $3,041 with the same orders under per-block two-phase clearing, and about $0 if attackers stop](results/figure.png)
 
-- **Sandwiches and losses.** 70,669 swaps. 236 sandwiches hit 244 victims, who lost **$12,387** against what they would have received with no front-run. Attackers grossed $8,713 and paid at least 50% of it as gas.
-- **Slippage taken.** Where the victim's minimum output could be decoded, attackers took 98% of the slippage tolerance.
-- **The attack under the mechanism.** No sandwich makes money for its attacker in any run.
-- **The victims.** With the same orders replayed, victims keep 75% of their loss on average across 200 random tie-breaks (52–99% across variants). If attackers stop, they keep essentially all of it.
-- **Exact replay gate.** The Python port of Uniswap v3's integer swap math reproduces all 70,669 swaps bit-exactly before any counterfactual is computed.
+This study measures sandwich attacks on the busiest WETH/USDT Uniswap v3 pool over one week of Ethereum mainnet data. It estimates what the victims lost by exact replay of Uniswap v3's integer swap math. It then replays each block through the per-block, two-phase, arbitrage-resilient mechanism of Chan, Wu & Shi, "Mechanism Design for Automated Market Makers" (AFT 2025, [arXiv 2402.09357](https://arxiv.org/abs/2402.09357)), to estimate how much of that loss the mechanism would have prevented.
 
-**How it works:** `scripts/ingest.py` pulls the week's swaps over JSON-RPC, `replay.py` checks exact v3 replay, `mev/detect.py` finds sandwiches, and `mev/mechanism.py` re-clears each block under the paper's two-phase rules; `scripts/run_all.sh` runs the whole pipeline.
+## Results
 
-**Run the tests:** `uv venv .venv && uv pip install --python .venv/bin/python pyarrow matplotlib pytest && .venv/bin/python -m pytest -q` (19 tests)
+Uniswap v3 WETH/USDT 0.01% (`0xc7bbec68…ba1b0e9b`), 5–11 October 2026 UTC, blocks 26,122,440–26,172,657. Numbers are from `results/summary.json` unless another file is named.
+
+| Finding | Value |
+|---|---|
+| Swaps in the week | 70,669 (69,028 transactions) |
+| Sandwiches found | 236 (193 at the strict ±1% amount match) |
+| Victims and their loss | 244 victims lost $12,387 against what they would have received with no front-run |
+| Attacker gross and gas | $8,713 gross, of which $4,400 (50%) went to gas |
+| Slippage taken | 98% of the victims' decodable slippage tolerance ($1,544 of $1,582, `results/tables.md`) |
+| Attacker profit under the mechanism | No sandwich makes money in any run (best case $0.00) |
+| Loss victims keep under the mechanism, same orders | 75% on average across 200 random tie-breaks (5th–95th percentile 68–84%; 52–99% across variants) |
+| Loss victims keep if attackers stop | About 100% |
+| Exact replay gate | 70,669 of 70,669 swaps reproduced bit-exactly, 4,041 of them across liquidity changes (`docs/methods.md`) |
 
 Further results:
 
-- **Memecoin extension (SIMD/WETH 0.01%, same week).** 240 sandwiches, $1,330 lost, 95% of it by one automated buyer. No attack pays under the mechanism, and victims keep 73% on average with the same orders (`results/simd-weth/`).
-- **Detection cross-check.** Dune's spellbook rule, re-implemented locally, confirms 99.6% and 100% of the sandwich blocks in the two pools (`results/dune-rule-replication.md`).
+- **Memecoin extension (SIMD/WETH 0.01%, same week).** 13,052 swaps, 240 sandwiches, 242 victims and $1,330 lost. One automated buyer carried 95% of that loss. No attack pays under the mechanism, and victims keep 73% on average with the same orders (`results/simd-weth/summary.json`).
+- **Detection cross-check.** A local re-implementation of Dune's spellbook rule confirms 99.6% (WETH/USDT) and 100% (SIMD/WETH) of the study's sandwich blocks. The 20 extra WETH/USDT blocks that Dune's rule flags all fail the study's 90–110% amount check (`results/dune-rule-replication.md`).
+- **Precision review.** 30 of 30 randomly sampled hits have sandwich structure: 25 textbook sandwiches, 3 that lost the attacker money and 2 whose front-run also routes through other pools (`results/precision-review.md`).
 
-![Cumulative victim loss](results/figure.png)
+## How it works
 
-Read `docs/methods.md` first. Tables are in `results/tables.md`.
+1. `scripts/ingest.py` pulls the week's Swap, Mint and Burn logs, transactions and the pool's starting state over JSON-RPC (`mev/rpc.py`) and saves them as Parquet.
+2. `scripts/replay.py` checks that `mev/v3.py`, a Python port of Uniswap v3's integer swap math, reproduces every swap exactly. The gate requires 100% of swaps to match.
+3. `scripts/analyze.py` finds sandwiches with `mev/detect.py`, computes counterfactual victim loss, decodes victim limits with `mev/calldata.py`, and re-clears each block under the paper's two-phase rules in `mev/mechanism.py`.
+4. `scripts/inspect_hits.py` collects precision evidence, and `scripts/report.py` writes the tables and the figure.
+5. `scripts/dune_rule.py` and `scripts/compare_dune.py` run the Dune spellbook rule on the same logs and compare it with the detector.
 
-## Layout
+`scripts/run_all.sh` runs the whole pipeline for both pools.
 
-- `mev/`
-  - `v3.py`: exact Uniswap v3 swap math
-  - `mechanism.py`: the paper's Figure 1
-  - `detect.py`: sandwich detection
-  - `calldata.py`: router limit decoding
-  - `rpc.py`, `data.py`, `pool.py`: data access and pool constants
-- `scripts/`
-  - `ingest.py`, then `replay.py` (gate: 100% exact)
-  - `analyze.py`, then `inspect_hits.py`, then `report.py`
-  - `run_all.sh` runs everything
-  - `compare_dune.py`: cross-check against a Dune export of `docs/dune/sandwiches.sql`
-  - `scan_pools.py`: candidate-pool and control counts
-- `tests/`: v3 math, the detector, and the mechanism's rules and Theorem 3.1
-- `docs/`
-  - `research.md`: sources
-  - `plan.md`: plan and status
-  - `pool-selection.md`: pool choice and frozen week
-  - `methods.md`: methods note
-- `results/`: CSVs, `summary.json`, tables, figure and its brief, and precision evidence
-- `textbook/`: a self-contained study guide (`index.html`) that teaches everything needed to explain and defend the study; built by `build.py` from the results and the tested code. Plan in `PLAN.md`, checks in `CHECKS.md`
+## Run it
 
-## Reproduce
+Prerequisites: Python 3.13 (the version tested) and [uv](https://docs.astral.sh/uv/). The pipeline uses the standard library plus `pyarrow` and `matplotlib`.
+
+Install and run the tests:
 
 ```bash
-uv venv .venv && uv pip install --python .venv/bin/python pyarrow matplotlib pytest
+uv venv .venv
+uv pip install --python .venv/bin/python pyarrow matplotlib pytest
+.venv/bin/python -m pytest -q
+```
+
+Observed on 2026-10-21: `19 passed in 0.07s`. The tests cover the v3 math, calldata decoding, the detector, and the mechanism's rules and Theorem 3.1.
+
+Reproduce every result:
+
+```bash
 scripts/run_all.sh
 ```
 
-`data/`, `references/` and `outreach/` are local only and are not tracked in git.
+- This needs network access to a free archive RPC (`rpc.mevblocker.io`, with `eth.drpc.org` as fallback). No API key is needed.
+- It takes about an hour, mostly to download transactions, and it rewrites `results/`.
+- Its last step, `textbook/build.py`, needs the separate `rahil-design` bundle. Set `RAHIL_DESIGN` to its folder, or skip that step.
+
+## Repository layout
+
+- `mev/`: the library. Exact v3 swap math, the detector, calldata decoding, the mechanism, RPC access and pool constants.
+- `scripts/`: the pipeline steps, the Dune-rule cross-check and the pool scans.
+- `tests/`: pytest tests for the v3 math, calldata decoding, the detector and the mechanism.
+- `results/`: CSVs, `summary.json`, tables, the figure and its brief, and precision evidence. `results/simd-weth/` holds the memecoin extension.
+- `docs/`: the methods note, research notes, plan and pool selection.
+- `textbook/`: a self-contained study guide (`index.html`) built by `build.py` from the results and the tested code.
+
+`data/` and `references/` are local only and are not tracked in git.
+
+## Documentation
+
+- [`docs/methods.md`](docs/methods.md): the methods note. Read it first. It covers data, exact replay, detection, loss measures, the mechanism counterfactual, the memecoin extension and the limits.
+- [`docs/research.md`](docs/research.md): the paper, the detection literature, the loss definitions and the data sources tested, with citations.
+- [`docs/pool-selection.md`](docs/pool-selection.md): how the pool and week were chosen, and the 2026-10-18 correction about the missed USDC/WETH 0.01% pool.
+- [`docs/plan.md`](docs/plan.md): the study plan, its acceptance criteria and its status.
+- [`docs/dune/sandwiches.sql`](docs/dune/sandwiches.sql): a query to run on Dune itself as a further cross-check. It has not been run.
+
+## Sources
+
+- **On-chain data.** Ethereum mainnet logs, transactions, receipts and archive state from the public JSON-RPC endpoint `rpc.mevblocker.io`, pulled 17–18 October 2026. `eth.drpc.org` returned the same 70,669 swap logs.
+- **Date range.** 5–11 October 2026 UTC, blocks 26,122,440–26,172,657. The block range is fixed in `mev/pool.py`. A rerun of the ingest gave byte-identical Parquet files (`docs/plan.md`).
+- **Mechanism.** T-H. Hubert Chan, Ke Wu and Elaine Shi, "Mechanism Design for Automated Market Makers", AFT 2025, [arXiv 2402.09357](https://arxiv.org/abs/2402.09357) v3.
+- **Dune rule.** The public spellbook macros `dex_sandwiches.sql` and `dex_sandwiched.sql`, read on 2026-10-18 and re-implemented in `scripts/dune_rule.py`. No Dune account or Dune data was used.
+- The license covers this project's code. It does not cover third-party data or papers.
+
+## Scope and limits
+
+- This is independent research. It is not affiliated with the paper's authors, Uniswap, Dune or any MEV searcher.
+- The study covers one pool and one week. A week is one sample, not a yearly rate.
+- The study pool is the busiest WETH/USDT pool, not the busiest pool. A later scan found that v3 USDC/WETH 0.01% has about 2.4 times the swaps (`docs/pool-selection.md`).
+- The counterfactual replays the observed orders. It cannot say how bots, builders and traders would respond to the mechanism.
+- The detector sees only same-block, single-pool sandwiches.
+- Attacker payments to builders by internal ETH transfer are not counted, so attacker profit net of gas is an upper bound.
+- The AI agent that built the pipeline did the precision review from receipts and read Etherscan pages for 5 hits. A human Etherscan spot-check is still pending.
+
+## License
+
+MIT. See [`LICENSE`](LICENSE).
+
+Part of [Rahil Bhavan's projects](https://github.com/RahilBhavan).

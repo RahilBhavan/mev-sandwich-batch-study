@@ -1,6 +1,6 @@
 # Research notes (2026-10-17)
 
-These are the inputs the study rests on. Claims carry sources. Items marked **[unverified]** have not been checked against a primary source. The PDFs cited are kept locally in `references/` (gitignored).
+These are the inputs the study rests on. Claims carry sources. Items marked **[unverified]** have not been checked against a primary source. The PDFs cited are kept locally in `references/`, which is not tracked in git.
 
 ## 1. The design being tested
 
@@ -8,7 +8,7 @@ These are the inputs the study rests on. Claims carry sources. Items marked **[u
 
 This is Ke Wu's only paper that batches DEX orders per block to stop front-running. Her other papers are about transaction fee mechanisms ([2209.14462](https://arxiv.org/abs/2209.14462), [2302.12895](https://arxiv.org/abs/2302.12895), [2501.03141](https://arxiv.org/abs/2501.03141), and the 2026 papers [2609.32005](https://arxiv.org/abs/2609.32005) and [2610.00697](https://arxiv.org/abs/2610.00697)). Her position: Assistant Professor, UMich CSE ([MICL story, Feb 2025](https://micl.engin.umich.edu/stories/ke-wu-receives-stellar-academic-research-grant)).
 
-**It is not a uniform-price batch auction.** §1.2 states that "batch clearing at uniform price [CF23, CF24, cow] does not automatically guarantee incentive compatibility". The outreach must not describe it as a uniform-price design.
+**It is not a uniform-price batch auction.** §1.2 states that "batch clearing at uniform price [CF23, CF24, cow] does not automatically guarantee incentive compatibility". This study does not describe it as a uniform-price design.
 
 **The mechanism (§3.1, Figure 1).** Its input is one block's orders on one two-asset pool. Each order is (type, max amount v, limit rate r).
 
@@ -30,20 +30,20 @@ This is Ke Wu's only paper that batches DEX orders per block to stop front-runni
 
 **Empirical gap.** The paper is theory only and contains no on-chain measurement. This study supplies the measurement it leaves out.
 
-**Follow-up by others:** Li, Shi, Zhang, "A Trilemma in AMM Mechanism Design", [arXiv 2605.27602](https://arxiv.org/abs/2605.27602) (May 2026; Ke Wu is not an author). Of incentive compatibility (IC), weak local efficiency (wLE: no unfilled demand from orders that could have executed directly against the pool) and uniform pricing (UP), any two are achievable but not all three. Chan–Wu–Shi's mechanism gives up UP. This is why the outreach must not call it a uniform-price batch auction, and it suggests a question: how much efficiency the measured blocks lose to the IC choice (the unfilled volume this study reports).
+**Follow-up by others:** Li, Shi, Zhang, "A Trilemma in AMM Mechanism Design", [arXiv 2605.27602](https://arxiv.org/abs/2605.27602) (May 2026; Ke Wu is not an author). Of incentive compatibility (IC), weak local efficiency (wLE: no unfilled demand from orders that could have executed directly against the pool) and uniform pricing (UP), any two are achievable but not all three. Chan–Wu–Shi's mechanism gives up UP. This is why the study does not call it a uniform-price batch auction, and it suggests a question: how much efficiency the measured blocks lose to the IC choice (the unfilled volume this study reports).
 
-## 2. Wellman's angle
+## 2. Related work: batch and continuous markets (Wellman)
 
 - Michael P. Wellman is Lynn A. Conway Collegiate Professor at UMich CSE and leads the [Strategic Reasoning Group](https://strategicreasoning.org/publications/).
 - I found no blockchain, MEV or AMM work in his CV (July 2024) or the group's publication list. A 2025–26 DeFi workshop paper could still exist; Google Scholar was not searched.
-- The direct hook is batch versus continuous markets:
+- The related question is batch versus continuous markets:
   - Wah & Wellman, "Latency arbitrage in fragmented markets", Algorithmic Finance 2016 ([link](https://content.iospress.com/doi/10.3233/AF-160060)). It finds that frequent call markets eliminate latency arbitrage.
   - Wah, Hurd, Wellman, "Strategic market choice: frequent call markets vs. continuous double auctions" (AMMA 2015).
   - His [CFTC comment](https://comments.cftc.gov/Handlers/PdfHandler.ashx?id=25238) arguing for call markets.
 - His method is agent-based simulation, such as PyMarketSim ([ICAIF 2024](https://strategicreasoning.org/wp-content/uploads/2024/10/MarketSim_ICAIF24.pdf)) and the spoofing work. A historical counterfactual replay is a natural first step toward that kind of simulation.
 - I found no joint Ke Wu–Wellman paper, student or lab.
 - **Rechecked 2026-10-17.** His 25 most recent arXiv papers (author query `au:Wellman_Michael`, newest Feb 2026) contain nothing on blockchains, MEV or AMMs. A web search also found none. The recent work is empirical game-theoretic analysis (EGTA): for example "Learning Bayesian Game Families, with Application to Mechanism Design" (Feb 2025), "Computing Perfect Bayesian Equilibria, with Application to Empirical Game-Theoretic Analysis" (Feb 2026) and an EGTA survey (2024). Note: "The Viability of Blockchain Markets under Discrete Clearing and Paid Priority" (arXiv 2605.17425) looks like his topic but is by Capponi, Cartea and Drissi.
-- **Sharper hook for Wellman:** this study's main limit is that it replays the same orders and can't say how bots and traders would respond to the mechanism. Working out that response is an empirical game, which is his method.
+- **Open question:** this study's main limit is that it replays the same orders and can't say how bots and traders would respond to the mechanism. Working out that response is an empirical game, which is Wellman's method.
 
 ## 3. Data access (tested 2026-10-17)
 
