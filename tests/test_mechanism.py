@@ -1,10 +1,7 @@
 """Properties of the Chan-Wu-Shi mechanism (arXiv 2402.09357 v3, section 3) checked on a v3 pool."""
-import os
 import random
-import sys
 from fractions import Fraction
 
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from mev import mechanism, v3
 
 L = 10**20

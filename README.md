@@ -50,7 +50,7 @@ uv pip install --python .venv/bin/python -r requirements.txt
 .venv/bin/python -m pytest -q
 ```
 
-Observed on 2026-10-24: `19 passed in 0.06s`. The tests cover the v3 math, calldata decoding, the detector, and the mechanism's rules and Theorem 3.1.
+`pytest.ini` points pytest at `tests/` and the repo root, so plain `.venv/bin/pytest` works from the root as well. Observed on 2026-10-24 with Python 3.13.15, the CI version, and the pinned requirements installed by uv: `19 passed in 0.06s`. The tests cover the v3 math, calldata decoding, the detector, and the mechanism's rules and Theorem 3.1.
 
 Reproduce every result:
 
