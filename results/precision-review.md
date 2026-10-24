@@ -1,6 +1,6 @@
 # Detection precision check (plan day 5)
 
-Reviewed 2026-10-17 by the agent, one row at a time, from on-chain evidence: full receipts of each leg and victim, the weekly sender count of each target contract, and ENS reverse names resolved on chain. Sample: 30 of 236 hits drawn with `random.Random(30)` in `scripts/inspect_hits.py` output order. Etherscan pages were not opened; the same facts come from the receipts. A human spot-check of five of these on Etherscan is still worth doing before sending.
+Reviewed 2026-10-17 by the agent, one row at a time, from on-chain evidence: full receipts of each leg and victim, the weekly sender count of each target contract, and ENS reverse names resolved on chain. Sample: 30 of 236 hits drawn with `random.Random(30)` in `scripts/inspect_hits.py` output order. This 30-hit review used receipts only; no Etherscan pages were opened for it. A later check of five other hits on Etherscan is recorded in the section below. That check is the agent's own account: the repository holds no screenshots or logs of the page reads, so it is not independently verifiable. A human Etherscan spot-check is still open.
 
 Verdict key: **S** = sandwich (private bot contract, same EOA on both legs, victim trades in the front-run's direction through a public router or its own wallet, back-run sells back what the front-run bought). **S-loss** = same structure, but the attacker's legs lost money on this pool. **S-arb** = sandwich whose front-run also routes through other pools.
 

@@ -67,7 +67,7 @@ The rule is in `mev/detect.py`; it follows Qin, Zhou and Gervais (S&P 2022) and 
 | mevrevolutionx.eth | 56 | $1,815 |
 | Third (no ENS name) | 33 | $3,719 |
 
-**Etherscan check.** The agent read 15 transaction pages covering 5 hits on etherscan.io. All 5 are sandwiches: the pages match the RPC data, attacker contracts carry Etherscan's MEV-bot name tags, and block positions are front-run, then victim, then back-run.
+**Etherscan check.** After the 30-hit receipt review (which opened no Etherscan pages), the agent read 15 transaction pages covering 5 hits on etherscan.io. The repository keeps no screenshots or logs of these reads, only the agent's recorded findings (`results/precision-review.md`). All 5 are sandwiches: the pages match the RPC data, attacker contracts carry Etherscan's MEV-bot name tags, and block positions are front-run, then victim, then back-run.
 
 The check found the just-in-time liquidity pattern and the builder bribes. Both are now handled or stated (see (b)).
 

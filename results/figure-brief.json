@@ -3,7 +3,7 @@
   "set": "mev-sandwich-batch-study",
   "template": "matplotlib-methods-note",
   "accent_meaning": "title-value",
-  "reader": "Ke Wu (mechanism design for AMMs) or Michael Wellman (market design, EGTA), reading an email attachment or methods note on a laptop",
+  "reader": "a researcher in AMM mechanism design or market design, reading a methods note on a laptop",
   "decision": "Believe the measurement is careful enough to be worth a reply about the paper's mechanism on real order flow",
   "point": "Victims lost $12.4k to 236 sandwiches in one week; per-block clearing on the same orders leaves $3.0k, and no attack makes money under it.",
   "comparison": "Status-quo victim loss against the same blocks replayed through the Chan-Wu-Shi mechanism, and against attackers abstaining",
@@ -62,8 +62,8 @@
   },
   "verdict_allow": [],
   "warn_reasons": {
-    "agent self-test": "no outside reader yet; ask Rahil to read it at full size before sending",
-    "feed width": "not an X post; read at full size in a PDF or email attachment. At 800 px the footer renders at 11.7 px, below the feed rule",
-    "the point renders at 38px": "title and both end values read at 400 px; subtitle and footer do not, acceptable for a full-size attachment"
+    "agent self-test": "no outside reader yet; read it at full size before sharing",
+    "feed width": "not an X post; read at full size in a PDF or methods note. At 800 px the footer renders at 11.7 px, below the feed rule",
+    "the point renders at 38px": "title and both end values read at 400 px; subtitle and footer do not, acceptable for a full-size document"
   }
 }
