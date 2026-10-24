@@ -40,17 +40,17 @@ Further results:
 
 ## Run it
 
-Prerequisites: Python 3.13 (the version tested) and [uv](https://docs.astral.sh/uv/). The pipeline uses the standard library plus `pyarrow` and `matplotlib`.
+Prerequisites: Python 3.13 (the version tested) and [uv](https://docs.astral.sh/uv/). The pipeline uses the standard library plus `pyarrow` and `matplotlib`; `requirements.txt` pins the versions the tests last ran with.
 
 Install and run the tests:
 
 ```bash
 uv venv .venv
-uv pip install --python .venv/bin/python pyarrow matplotlib pytest
+uv pip install --python .venv/bin/python -r requirements.txt
 .venv/bin/python -m pytest -q
 ```
 
-Observed on 2026-10-21: `19 passed in 0.07s`. The tests cover the v3 math, calldata decoding, the detector, and the mechanism's rules and Theorem 3.1.
+Observed on 2026-10-24: `19 passed in 0.06s`. The tests cover the v3 math, calldata decoding, the detector, and the mechanism's rules and Theorem 3.1.
 
 Reproduce every result:
 
