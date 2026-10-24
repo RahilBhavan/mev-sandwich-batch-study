@@ -1,0 +1,4 @@
+# Versions the tests were run with on 2026-10-24 (Python 3.14.7). CI uses Python 3.13.
+matplotlib==3.11.2
+pyarrow==26.0.0
+pytest==9.1.1
