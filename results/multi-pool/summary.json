@@ -1,0 +1,242 @@
+[
+ {
+  "pool_key": "usdc-weth-0.01",
+  "pool": "USDC/WETH 0.01%",
+  "address": "0xe0554a476a092703abdb3ef35c80e0d76d32939f",
+  "week_start": "2026-09-14",
+  "blocks": [
+   25971962,
+   26022169
+  ],
+  "swaps": 147100,
+  "swap_txs": 143104,
+  "blocks_checked": 13341,
+  "txs_fetched": 71081,
+  "sandwiches": 218,
+  "sandwiches_strict": 162,
+  "victims": 223,
+  "attackers": 25,
+  "top_attacker_share": 0.243,
+  "top_attacker": "0xae2fc483527b8ef99eb5d9b44875f005ba1fae13"
+ },
+ {
+  "pool_key": "usdc-weth-0.01",
+  "pool": "USDC/WETH 0.01%",
+  "address": "0xe0554a476a092703abdb3ef35c80e0d76d32939f",
+  "week_start": "2026-09-21",
+  "blocks": [
+   26022170,
+   26072221
+  ],
+  "swaps": 150606,
+  "swap_txs": 147102,
+  "blocks_checked": 14005,
+  "txs_fetched": 75374,
+  "sandwiches": 130,
+  "sandwiches_strict": 90,
+  "victims": 139,
+  "attackers": 22,
+  "top_attacker_share": 0.315,
+  "top_attacker": "0xae2fc483527b8ef99eb5d9b44875f005ba1fae13"
+ },
+ {
+  "pool_key": "usdc-weth-0.01",
+  "pool": "USDC/WETH 0.01%",
+  "address": "0xe0554a476a092703abdb3ef35c80e0d76d32939f",
+  "week_start": "2026-09-28",
+  "blocks": [
+   26072222,
+   26122439
+  ],
+  "swaps": 158585,
+  "swap_txs": 154755,
+  "blocks_checked": 14865,
+  "txs_fetched": 82257,
+  "sandwiches": 103,
+  "sandwiches_strict": 81,
+  "victims": 108,
+  "attackers": 20,
+  "top_attacker_share": 0.301,
+  "top_attacker": "0xae2fc483527b8ef99eb5d9b44875f005ba1fae13"
+ },
+ {
+  "pool_key": "usdc-weth-0.01",
+  "pool": "USDC/WETH 0.01%",
+  "address": "0xe0554a476a092703abdb3ef35c80e0d76d32939f",
+  "week_start": "2026-10-05",
+  "blocks": [
+   26122440,
+   26172657
+  ],
+  "swaps": 157335,
+  "swap_txs": 152906,
+  "blocks_checked": 14545,
+  "txs_fetched": 80131,
+  "sandwiches": 131,
+  "sandwiches_strict": 99,
+  "victims": 136,
+  "attackers": 17,
+  "top_attacker_share": 0.305,
+  "top_attacker": "0xae2fc483527b8ef99eb5d9b44875f005ba1fae13"
+ },
+ {
+  "pool_key": "weth-usdt-0.01",
+  "pool": "WETH/USDT 0.01%",
+  "address": "0xc7bbec68d12a0d1830360f8ec58fa599ba1b0e9b",
+  "week_start": "2026-09-14",
+  "blocks": [
+   25971962,
+   26022169
+  ],
+  "swaps": 90003,
+  "swap_txs": 87978,
+  "blocks_checked": 6182,
+  "txs_fetched": 28213,
+  "sandwiches": 324,
+  "sandwiches_strict": 251,
+  "victims": 340,
+  "attackers": 30,
+  "top_attacker_share": 0.373,
+  "top_attacker": "0xae2fc483527b8ef99eb5d9b44875f005ba1fae13"
+ },
+ {
+  "pool_key": "weth-usdt-0.01",
+  "pool": "WETH/USDT 0.01%",
+  "address": "0xc7bbec68d12a0d1830360f8ec58fa599ba1b0e9b",
+  "week_start": "2026-09-21",
+  "blocks": [
+   26022170,
+   26072221
+  ],
+  "swaps": 75075,
+  "swap_txs": 73524,
+  "blocks_checked": 4518,
+  "txs_fetched": 19955,
+  "sandwiches": 260,
+  "sandwiches_strict": 213,
+  "victims": 277,
+  "attackers": 37,
+  "top_attacker_share": 0.354,
+  "top_attacker": "0xae2fc483527b8ef99eb5d9b44875f005ba1fae13"
+ },
+ {
+  "pool_key": "weth-usdt-0.01",
+  "pool": "WETH/USDT 0.01%",
+  "address": "0xc7bbec68d12a0d1830360f8ec58fa599ba1b0e9b",
+  "week_start": "2026-09-28",
+  "blocks": [
+   26072222,
+   26122439
+  ],
+  "swaps": 72236,
+  "swap_txs": 71024,
+  "blocks_checked": 4121,
+  "txs_fetched": 17715,
+  "sandwiches": 193,
+  "sandwiches_strict": 152,
+  "victims": 199,
+  "attackers": 23,
+  "top_attacker_share": 0.389,
+  "top_attacker": "0xae2fc483527b8ef99eb5d9b44875f005ba1fae13"
+ },
+ {
+  "pool_key": "weth-usdt-0.01",
+  "pool": "WETH/USDT 0.01%",
+  "address": "0xc7bbec68d12a0d1830360f8ec58fa599ba1b0e9b",
+  "week_start": "2026-10-05",
+  "blocks": [
+   26122440,
+   26172657
+  ],
+  "swaps": 70669,
+  "swap_txs": 69028,
+  "blocks_checked": 3853,
+  "txs_fetched": 16577,
+  "sandwiches": 236,
+  "sandwiches_strict": 193,
+  "victims": 244,
+  "attackers": 23,
+  "top_attacker_share": 0.407,
+  "top_attacker": "0xae2fc483527b8ef99eb5d9b44875f005ba1fae13"
+ },
+ {
+  "pool_key": "usdc-weth-0.05",
+  "pool": "USDC/WETH 0.05%",
+  "address": "0x88e6a0c2ddd26feeb64f039a2c41296fcb3f5640",
+  "week_start": "2026-09-14",
+  "blocks": [
+   25971962,
+   26022169
+  ],
+  "swaps": 61512,
+  "swap_txs": 54786,
+  "blocks_checked": 1663,
+  "txs_fetched": 6985,
+  "sandwiches": 0,
+  "sandwiches_strict": 0,
+  "victims": 0,
+  "attackers": 0,
+  "top_attacker_share": null,
+  "top_attacker": null
+ },
+ {
+  "pool_key": "usdc-weth-0.05",
+  "pool": "USDC/WETH 0.05%",
+  "address": "0x88e6a0c2ddd26feeb64f039a2c41296fcb3f5640",
+  "week_start": "2026-09-21",
+  "blocks": [
+   26022170,
+   26072221
+  ],
+  "swaps": 47016,
+  "swap_txs": 45906,
+  "blocks_checked": 1427,
+  "txs_fetched": 6977,
+  "sandwiches": 3,
+  "sandwiches_strict": 3,
+  "victims": 7,
+  "attackers": 3,
+  "top_attacker_share": 0.333,
+  "top_attacker": "0x1837e2cfc622a72368ed835c1a98fcfc5de42b0f"
+ },
+ {
+  "pool_key": "usdc-weth-0.05",
+  "pool": "USDC/WETH 0.05%",
+  "address": "0x88e6a0c2ddd26feeb64f039a2c41296fcb3f5640",
+  "week_start": "2026-09-28",
+  "blocks": [
+   26072222,
+   26122439
+  ],
+  "swaps": 55419,
+  "swap_txs": 54698,
+  "blocks_checked": 2597,
+  "txs_fetched": 14359,
+  "sandwiches": 4,
+  "sandwiches_strict": 2,
+  "victims": 4,
+  "attackers": 4,
+  "top_attacker_share": 0.25,
+  "top_attacker": "0x45fd36c9cdd500c1b372d99ba3bd79da0d358504"
+ },
+ {
+  "pool_key": "usdc-weth-0.05",
+  "pool": "USDC/WETH 0.05%",
+  "address": "0x88e6a0c2ddd26feeb64f039a2c41296fcb3f5640",
+  "week_start": "2026-10-05",
+  "blocks": [
+   26122440,
+   26172657
+  ],
+  "swaps": 51029,
+  "swap_txs": 50288,
+  "blocks_checked": 2024,
+  "txs_fetched": 10061,
+  "sandwiches": 5,
+  "sandwiches_strict": 5,
+  "victims": 5,
+  "attackers": 3,
+  "top_attacker_share": 0.6,
+  "top_attacker": "0x4cd4499d6e6a0eb8995a2cabd400d1ad35c4d03e"
+ }
+]
