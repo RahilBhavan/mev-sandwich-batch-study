@@ -1,0 +1,1 @@
+Roboto Slab Bold, Archivo Regular and SemiBold, copied 25 Oct 2026 from a local earlier chart build (scratch fonts-dl). Roboto Slab is Apache 2.0 (LICENSE-RobotoSlab.txt); Archivo is SIL OFL 1.1 (OFL-Archivo.txt). Used only by scripts/card.py.
