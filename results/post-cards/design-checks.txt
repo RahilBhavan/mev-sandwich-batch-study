@@ -1,0 +1,17 @@
+# Hub design checks (rahil-design 3.10.0), run 2026-10-26
+## wed28-am-mev
+$ design_check.py lint wed28-am-mev.html ../../scripts/post_cards.py
+lint: ok
+$ design_check.py feed wed28-am-mev.brief.json
+wed28-am-mev.brief.json: at 326px feed width (canvas, 390px inspection) labels 18.4px, point 40.1px: ok
+$ pixel_audit.py wed28-am-mev-square.png
+wed28-am-mev-square.png: 0.00% of pixels off-system (limit 0.01%)
+## wed28-pm-mev-slippage
+$ design_check.py lint wed28-pm-mev-slippage.html ../../scripts/post_cards.py
+lint: ok
+$ design_check.py feed wed28-pm-mev-slippage.brief.json
+wed28-pm-mev-slippage.brief.json: at 326px feed width (canvas, 390px inspection) labels 18.4px, point 40.1px: ok
+$ pixel_audit.py wed28-pm-mev-slippage-square.png
+wed28-pm-mev-slippage-square.png: 0.00% of pixels off-system (limit 0.01%)
+## design_check.py system
+rahil-design@3.10.0: 19 contrast pairs, 5 pairs x 3 CVD simulations, 15 colours, ok (0 errors)

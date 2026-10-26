@@ -1,0 +1,15 @@
+{
+  "id": "wed28-pm-mev-slippage",
+  "title": "98% of slippage tolerance taken.",
+  "sizes_checked": [
+    "390x390"
+  ],
+  "measurement_basis": "canvas",
+  "measured_by": "post_cards.py/firefox",
+  "min_label_px": 22,
+  "point_px": 48,
+  "alt": "98% of slippage tolerance taken. Dollar totals for 115 of 244 victims, the ones whose decoded minimum was not zero. Tolerance set: $1,582. Taken by attackers: $1,544. Share taken: 98%, summed dollars rather than a median. WETH/USDT, Oct 5–11, 2026. Source: mev-sandwich-batch-study, data as of Oct 17, 2026.",
+  "artifacts": {
+    "wed28-pm-mev-slippage-square.png": "fc1c2dc3a982fb774ad947eee96d631b1c1c9dda5329771d52e1fa04119c89e7"
+  }
+}
