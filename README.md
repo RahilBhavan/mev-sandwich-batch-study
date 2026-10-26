@@ -67,7 +67,7 @@ scripts/run_all.sh
 - `mev/`: the library. Exact v3 swap math, the detector, calldata decoding, the mechanism, RPC access and pool constants.
 - `scripts/`: the pipeline steps, the Dune-rule cross-check and the pool scans.
 - `tests/`: pytest tests for the v3 math, calldata decoding, the detector and the mechanism.
-- `results/`: CSVs, `summary.json`, tables, the figure and its brief, and precision evidence. `results/simd-weth/` holds the memecoin extension.
+- `results/`: CSVs, `summary.json`, tables, the figure and its brief, and precision evidence. `results/simd-weth/` holds the memecoin extension. `scripts/card.py` redraws the two "get back" cards (`results/mev-get-back-landscape.png`, `-square.png`) from `victims.csv`.
 - `docs/`: the methods note, research notes, plan and pool selection.
 - `textbook/`: a self-contained study guide (`index.html`) built by `build.py` from the results and the tested code.
 
