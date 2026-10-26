@@ -16,10 +16,10 @@ Uniswap v3 WETH/USDT 0.01% (`0xc7bbec68…ba1b0e9b`), 5–11 October 2026 UTC, b
 | Sandwiches found | 236 (193 at the strict ±1% amount match) |
 | Victims and their loss | 244 victims lost $12,387 against what they would have received with no front-run |
 | Attacker gross and gas | $8,713 gross, of which $4,400 (50%) went to gas |
-| Slippage taken | 98% of the victims' decodable slippage tolerance ($1,544 of $1,582, `results/tables.md`) |
+| Slippage taken | 98% of the slippage tolerance of the 115 victims whose decoded limit is non-zero ($1,544 of $1,582, `results/tables.md`). Another 29 decoded victims set no minimum, which makes the 144 victims with a decoded limit |
 | Attacker profit under the mechanism | No sandwich makes money in any run (best case $0.00) |
-| Loss victims keep under the mechanism, same orders | 75% on average across 200 random tie-breaks (5th–95th percentile 68–84%; 52–99% across variants) |
-| Loss victims keep if attackers stop | About 100% |
+| Loss victims get back under the mechanism, same orders | 75% on average across 200 random tie-breaks (5th–95th percentile 68–84%; 52–99% across variants) |
+| Loss victims get back if attackers stop | About 100% |
 | Exact replay gate | 70,669 of 70,669 swaps reproduced bit-exactly, 4,041 of them across liquidity changes (`docs/methods.md`) |
 
 Further results:
@@ -50,7 +50,7 @@ uv pip install --python .venv/bin/python -r requirements.txt
 .venv/bin/python -m pytest -q
 ```
 
-`pytest.ini` points pytest at `tests/` and the repo root, so plain `.venv/bin/pytest` works from the root as well. Observed on 2026-10-24 with Python 3.13.15, the CI version, and the pinned requirements installed by uv: `19 passed in 0.06s`. The tests cover the v3 math, calldata decoding, the detector, and the mechanism's rules and Theorem 3.1.
+`pytest.ini` points pytest at `tests/` and the repo root, so plain `.venv/bin/pytest` works from the root as well. Observed on 2026-10-26 with Python 3.13.15, the CI version, and the pinned requirements installed by uv: `25 passed in 0.31s`. The tests cover the v3 math, calldata decoding, the detector, the mechanism's rules and Theorem 3.1, and the post cards' numbers and hashes.
 
 Reproduce every result:
 
@@ -67,7 +67,7 @@ scripts/run_all.sh
 - `mev/`: the library. Exact v3 swap math, the detector, calldata decoding, the mechanism, RPC access and pool constants.
 - `scripts/`: the pipeline steps, the Dune-rule cross-check and the pool scans.
 - `tests/`: pytest tests for the v3 math, calldata decoding, the detector and the mechanism.
-- `results/`: CSVs, `summary.json`, tables, the figure and its brief, and precision evidence. `results/simd-weth/` holds the memecoin extension. `scripts/card.py` redraws the two "get back" cards (`results/mev-get-back-landscape.png`, `-square.png`) from `victims.csv`.
+- `results/`: CSVs, `summary.json`, tables, the figure and its brief, and precision evidence. `results/simd-weth/` holds the memecoin extension. `scripts/card.py` redraws the MEV "get back" card and the slippage card, each at 1024x640 and 1024x1024 (`results/mev-get-back-*.png`, `results/slippage-taken-*.png`), with their alt text and PNG hashes. `DESIGN.md` sets their design.
 - `docs/`: the methods note, research notes, plan and pool selection.
 - `textbook/`: a self-contained study guide (`index.html`) built by `build.py` from the results and the tested code.
 
