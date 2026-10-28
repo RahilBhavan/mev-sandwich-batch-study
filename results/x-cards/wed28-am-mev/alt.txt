@@ -1,0 +1,1 @@
+Order matters. Share of the $12,387 sandwich loss recovered in a replay of one WETH/USDT pool, Oct 5–11, 2026, keeping the same orders, on a 0–100% scale: arrival order 52%; across 200 random tie-breaks the mean is 75% and the 5th–95th percentile range is 68–84%. Counterfactual replay, not a deployment. Source: github.com/RahilBhavan/mev-sandwich-batch-study.

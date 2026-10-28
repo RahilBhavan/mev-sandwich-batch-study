@@ -1,0 +1,26 @@
+{
+ "id": "wed28-am-mev",
+ "kind": "range",
+ "title": "Order matters.",
+ "named": "Order",
+ "axis": "Loss recovered, of $12,387",
+ "scale": [
+  0,
+  100
+ ],
+ "marker": {
+  "at": 51.72,
+  "label": "Arrival order",
+  "text": "52%",
+  "highlight": true
+ },
+ "band": {
+  "from": 67.84,
+  "to": 84.03,
+  "label": "200 random: mean 75%",
+  "text": "5th–95th: 68–84%"
+ },
+ "source": "WETH/USDT · Oct 5–11, 2026",
+ "alt": "Order matters. Share of the $12,387 sandwich loss recovered in a replay of one WETH/USDT pool, Oct 5–11, 2026, keeping the same orders, on a 0–100% scale: arrival order 52%; across 200 random tie-breaks the mean is 75% and the 5th–95th percentile range is 68–84%. Counterfactual replay, not a deployment. Source: github.com/RahilBhavan/mev-sandwich-batch-study.",
+ "scale_labels": "end"
+}

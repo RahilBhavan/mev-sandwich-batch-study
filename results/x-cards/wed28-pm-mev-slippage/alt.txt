@@ -1,0 +1,1 @@
+98% of the tolerance, taken. A bar filled to 98%: of $1,582 slippage tolerance across 115 of 244 victims with decoded nonzero limits, attackers took $1,544 and $38 was left. Summed dollars, one WETH/USDT pool, Oct 5–11, 2026; the ratio is not per victim or for all trades. Source: github.com/RahilBhavan/mev-sandwich-batch-study.
