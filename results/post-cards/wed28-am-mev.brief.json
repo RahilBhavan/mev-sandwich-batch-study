@@ -1,6 +1,6 @@
 {
   "id": "wed28-am-mev",
-  "title": "52% or 75%: order matters.",
+  "title": "Replay recovered 75%. Arrival order: 52%.",
   "sizes_checked": [
     "390x390"
   ],
@@ -8,8 +8,8 @@
   "measured_by": "post_cards.py/firefox",
   "min_label_px": 22,
   "point_px": 48,
-  "alt": "52% or 75%: order matters. Share of the $12,387 sandwich loss recovered under per-block batch clearing, replaying the same orders in one WETH/USDT pool, Oct 5–11, 2026. Arrival order: 51.7%. Random tie-breaks, mean of 200: 75.4%, 5th–95th percentile 68%–84%. Counterfactual replay, not observed protocol behavior. Source: mev-sandwich-batch-study, data as of Oct 17, 2026.",
+  "alt": "Replay recovered 75%. Arrival order: 52%. Share of $12,387 sandwich loss recovered (counterfactual replay), on a 0–100% scale. Arrival order: 52%. Random tie-break orders, 200 runs: mean 75% (marked), 5th–95th percentile 68%–84% (the bar). Counterfactual replay, not observed protocol behavior. Source: mev-sandwich-batch-study replay, busiest WETH/USDT pool, Oct 5–11, 2026.",
   "artifacts": {
-    "wed28-am-mev-square.png": "44f0a7aa163fcf7744d3ff2f69a3dde7aff1ef46e06d4416b3a677facb80d581"
+    "wed28-am-mev-square.png": "e8d3b8429a7fcab3eb66cd870c51f93ea06d0c6dc74fc78c42f6e41f8397bfeb"
   }
 }

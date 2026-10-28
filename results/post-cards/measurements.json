@@ -2,7 +2,7 @@
   "wed28-am-mev": {
     "slot": "2026-10-28 09:30 ET",
     "png": "wed28-am-mev-square.png",
-    "sha256": "44f0a7aa163fcf7744d3ff2f69a3dde7aff1ef46e06d4416b3a677facb80d581",
+    "sha256": "e8d3b8429a7fcab3eb66cd870c51f93ea06d0c6dc74fc78c42f6e41f8397bfeb",
     "canvas_px": 390,
     "min_label_px": 22,
     "title_px": 48,
@@ -22,18 +22,20 @@
     },
     "blocks": [
       {
-        "text": "52% or 75%:order matters.",
-        "lines": 2,
+        "text": "Replay recovered 75%. Arrival order: 52%.",
+        "lines": 3,
         "words_per_line": [
-          3,
+          2,
+          2,
           2
         ]
       },
       {
-        "text": "Share of $12,387 loss recovered",
-        "lines": 1,
+        "text": "Share of $12,387 sandwich loss recovered (counterfactual replay)",
+        "lines": 2,
         "words_per_line": [
-          5
+          5,
+          3
         ]
       },
       {
@@ -44,42 +46,54 @@
         ]
       },
       {
-        "text": "51.7%",
+        "text": "52%",
         "lines": 1,
         "words_per_line": [
           1
         ]
       },
       {
-        "text": "Random tie-breaks,mean of 200",
-        "lines": 2,
+        "text": "Random: 68–84%",
+        "lines": 1,
+        "words_per_line": [
+          2
+        ]
+      },
+      {
+        "text": "mean 75%",
+        "lines": 1,
+        "words_per_line": [
+          2
+        ]
+      },
+      {
+        "text": "0%",
+        "lines": 1,
+        "words_per_line": [
+          1
+        ]
+      },
+      {
+        "text": "50%",
+        "lines": 1,
+        "words_per_line": [
+          1
+        ]
+      },
+      {
+        "text": "100%",
+        "lines": 1,
+        "words_per_line": [
+          1
+        ]
+      },
+      {
+        "text": "Source: mev-sandwich-batch-study replay · busiest WETH/USDT pool, Oct 5–11, 2026",
+        "lines": 3,
         "words_per_line": [
           2,
-          3
-        ]
-      },
-      {
-        "text": "75.4%",
-        "lines": 1,
-        "words_per_line": [
-          1
-        ]
-      },
-      {
-        "text": "5th–95th percentile: 68%–84%",
-        "lines": 1,
-        "words_per_line": [
-          3
-        ]
-      },
-      {
-        "text": "Same orders, one WETH/USDT pool,Oct 5–11, 2026. Replay, not live.Source: mev-sandwich-batch-study,data as of Oct 17, 2026.",
-        "lines": 4,
-        "words_per_line": [
           5,
-          6,
-          2,
-          6
+          3
         ]
       }
     ],
@@ -90,11 +104,11 @@
       ],
       "pixels": 1166400,
       "exact": {
-        "#111214": 655029,
-        "#F5F5EF": 456865,
-        "#FFE500": 10728
+        "#111214": 626339,
+        "#F5F5EF": 481902,
+        "#FFE500": 13841
       },
-      "blended": 43778,
+      "blended": 44318,
       "off_palette": 0
     },
     "problems": []
@@ -102,7 +116,7 @@
   "wed28-pm-mev-slippage": {
     "slot": "2026-10-28 18:00 ET",
     "png": "wed28-pm-mev-slippage-square.png",
-    "sha256": "fc1c2dc3a982fb774ad947eee96d631b1c1c9dda5329771d52e1fa04119c89e7",
+    "sha256": "a2fd0afc2e65fe095912d580cc40689885cf6c3cd2b19044b45618ebdeef7e60",
     "canvas_px": 390,
     "min_label_px": 22,
     "title_px": 48,
@@ -130,10 +144,13 @@
         ]
       },
       {
-        "text": "Dollars, 115 of 244 victims",
-        "lines": 1,
+        "text": "Slippage tolerance (no-attack output − victim's minimum), 115 of 244 victims with decoded nonzero limits",
+        "lines": 4,
         "words_per_line": [
-          5
+          3,
+          4,
+          5,
+          3
         ]
       },
       {
@@ -179,20 +196,12 @@
         ]
       },
       {
-        "text": "Summed dollars, not a median.",
-        "lines": 1,
+        "text": "Source: mev-sandwich-batch-study methods.md · busiest WETH/USDT pool, Oct 5–11, 2026",
+        "lines": 3,
         "words_per_line": [
-          5
-        ]
-      },
-      {
-        "text": "WETH/USDT, Oct 5–11, 2026.Nonzero decoded limits only.Source: mev-sandwich-batch-study,data as of Oct 17, 2026.",
-        "lines": 4,
-        "words_per_line": [
-          4,
-          4,
           2,
-          6
+          4,
+          4
         ]
       }
     ],
@@ -203,11 +212,11 @@
       ],
       "pixels": 1166400,
       "exact": {
-        "#111214": 622708,
-        "#F5F5EF": 492436,
-        "#FFE500": 7627
+        "#111214": 574238,
+        "#F5F5EF": 538853,
+        "#FFE500": 6839
       },
-      "blended": 43629,
+      "blended": 46470,
       "off_palette": 0
     },
     "problems": []

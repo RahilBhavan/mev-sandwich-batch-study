@@ -1,4 +1,4 @@
-"""The Oct 28 post cards (MEV 9:30 AM ET, slippage 6 PM ET) in Rahil Design: charcoal, off-white, yellow, Anton and IBM Plex Sans.
+"""The Oct 28 post cards (MEV 9:30 AM ET, slippage 6 PM ET) in Rahil Design 3.x: charcoal, off-white, yellow, Anton and IBM Plex Sans.
 
 usage: uv run --with playwright==1.63.0 --with pillow --with numpy python scripts/post_cards.py [RESULTS]
 
@@ -27,8 +27,7 @@ BASE, EXPORT = 390, 1080
 LABEL_PX, TITLE_PX = 22, 48
 FEED_BOX = {360: 328, 390: 358}  # image width inside a feed of that width (16px gutters)
 FEED_FLOOR = {"content": 326, "label": 18, "point": 40}
-AS_OF = "Oct 17, 2026"
-SOURCE = "mev-sandwich-batch-study"
+POOL_WEEK = "busiest WETH/USDT pool, Oct 5–11, 2026"
 FIREFOX = Path.home() / ".cache/ms-playwright/firefox-1555/firefox/firefox"
 
 
@@ -56,34 +55,29 @@ def numbers(results):
 
 
 def cards(n):
-    """The two cards as data. A '|' in a label is a deliberate line break."""
+    """The two cards as data. A '|' in a title is a deliberate line break."""
     assert n["draws"] == 200 and n["victims"] == 244 and n["with_limit"] == 115
-    mev_rows = [("Arrival order", pct(n["arrival"]), False),
-                ("Random tie-breaks,|mean of 200", pct(n["mean"]), True)]
-    mev_range = f"5th–95th percentile: {n['p5']:.0%}–{n['p95']:.0%}"
+    mev_title = f"Replay recovered {n['mean']:.0%}. Arrival order: {n['arrival']:.0%}."
+    share = n["taken"] / n["tolerance"]
     slip_rows = [("Tolerance set", f"${n['tolerance']:,.0f}", False), ("Taken by attackers", f"${n['taken']:,.0f}", False),
-                 ("Share taken", f"{n['taken'] / n['tolerance']:.0%}", True)]
+                 ("Share taken", f"{share:.0%}", True)]
+    mev_context = f"Share of ${n['loss']:,.0f} sandwich loss recovered (counterfactual replay)"
+    slip_context = (f"Slippage tolerance (no-attack output − victim's minimum), {n['with_limit']} of {n['victims']} "
+                    f"victims with decoded nonzero limits")
     return [
-        dict(id="wed28-am-mev", slot="2026-10-28 09:30 ET",
-             title=f"{n['arrival']:.0%} or {n['mean']:.0%}:|order matters.",
-             context=f"Share of ${n['loss']:,.0f} loss recovered", rows=mev_rows, note=mev_range,
-             foot=["Same orders, one WETH/USDT pool,", "Oct 5–11, 2026. Replay, not live.", f"Source: {SOURCE},",
-                   f"data as of {AS_OF}."],
-             alt=(f"{n['arrival']:.0%} or {n['mean']:.0%}: order matters. Share of the ${n['loss']:,.0f} sandwich loss recovered "
-                  f"under per-block batch clearing, replaying the same orders in one WETH/USDT pool, Oct 5–11, 2026. "
-                  f"Arrival order: {pct(n['arrival'])}. Random tie-breaks, mean of {n['draws']}: {pct(n['mean'])}, "
-                  f"5th–95th percentile {n['p5']:.0%}–{n['p95']:.0%}. Counterfactual replay, not observed protocol behavior. "
-                  f"Source: {SOURCE}, data as of {AS_OF}.")),
+        dict(id="wed28-am-mev", slot="2026-10-28 09:30 ET", title=mev_title, context=mev_context,
+             chart=dict(arrival=n["arrival"], mean=n["mean"], p5=n["p5"], p95=n["p95"], draws=n["draws"]),
+             foot=f"Source: mev-sandwich-batch-study replay · {POOL_WEEK}",
+             alt=(f"{mev_title.replace('|', ' ')} {mev_context}, on a 0–100% scale. "
+                  f"Arrival order: {n['arrival']:.0%}. Random tie-break orders, {n['draws']} runs: mean {n['mean']:.0%} (marked), "
+                  f"5th–95th percentile {n['p5']:.0%}–{n['p95']:.0%} (the bar). Counterfactual replay, not observed "
+                  f"protocol behavior. Source: mev-sandwich-batch-study replay, {POOL_WEEK}.")),
         dict(id="wed28-pm-mev-slippage", slot="2026-10-28 18:00 ET",
-             title=f"{n['taken'] / n['tolerance']:.0%} of slippage|tolerance taken.",
-             context=f"Dollars, {n['with_limit']} of {n['victims']} victims", rows=slip_rows,
-             note="Summed dollars, not a median.",
-             foot=["WETH/USDT, Oct 5–11, 2026.", "Nonzero decoded limits only.", f"Source: {SOURCE},",
-                   f"data as of {AS_OF}."],
-             alt=(f"{n['taken'] / n['tolerance']:.0%} of slippage tolerance taken. Dollar totals for {n['with_limit']} of "
-                  f"{n['victims']} victims, the ones whose decoded minimum was not zero. Tolerance set: ${n['tolerance']:,.0f}. "
-                  f"Taken by attackers: ${n['taken']:,.0f}. Share taken: {n['taken'] / n['tolerance']:.0%}, summed dollars rather "
-                  f"than a median. WETH/USDT, Oct 5–11, 2026. Source: {SOURCE}, data as of {AS_OF}.")),
+             title=f"{share:.0%} of slippage|tolerance taken.", context=slip_context, rows=slip_rows,
+             foot=f"Source: mev-sandwich-batch-study methods.md · {POOL_WEEK}",
+             alt=(f"{share:.0%} of slippage tolerance taken. {slip_context}. Tolerance set: ${n['tolerance']:,.0f}. "
+                  f"Taken by attackers: ${n['taken']:,.0f}. Share taken: {share:.0%}, a ratio of summed dollars rather "
+                  f"than a median. Source: mev-sandwich-batch-study methods.md, {POOL_WEEK}.")),
     ]
 
 
@@ -95,35 +89,65 @@ def lines(text):
     return "<br>".join(html.escape(p) for p in text.split("|"))
 
 
+def pc(x):
+    return f"{x * 100:.2f}%"
+
+
+def chart_html(ch):
+    """Two horizontal bars on one 0–100% axis. The arrival bar runs from zero; the random-orders bar spans the 5th to 95th
+    percentile of the draws, with the mean marked in yellow."""
+    return (
+        f'<div class="row"><span class="t">Arrival order</span><b class="t">{ch["arrival"]:.0%}</b></div>'
+        f'<div class="track"><i class="bar" style="left:0;width:{pc(ch["arrival"])}"></i></div>'
+        f'<div class="row"><span class="t">Random: {ch["p5"] * 100:.0f}–{ch["p95"]:.0%}</span><b class="t"><span class="hi">mean {ch["mean"]:.0%}</span></b></div>'
+        f'<div class="track"><i class="bar" style="left:{pc(ch["p5"])};width:{pc(ch["p95"] - ch["p5"])}"></i>'
+        f'<i class="mean" style="left:{pc(ch["mean"])}"></i></div>'
+        f'<div class="axis"><i style="left:0"></i><i style="left:50%"></i><i style="left:100%"></i>'
+        f'<span class="t" style="left:0">0%</span><span class="t mid">50%</span>'
+        f'<span class="t" style="right:0">100%</span></div>')
+
+
 def card_html(c):
-    rows = "".join(
-        f'<tr><th scope="row">{lines(label)}</th><td><span{" class=hi" if hi else ""}>{html.escape(value)}</span></td></tr>'
-        for label, value, hi in c["rows"])
+    if "chart" in c:
+        inner = chart_html(c["chart"])
+    else:
+        rows = "".join(
+            f'<tr><th scope="row">{lines(label)}</th><td><span{" class=hi" if hi else ""}>{html.escape(value)}</span></td></tr>'
+            for label, value, hi in c["rows"])
+        inner = f"<table>{rows}</table>"
     css = f"""
 @font-face{{font-family:'Rahil Display';src:url(data:font/ttf;base64,{b64('Anton-Regular.ttf')})}}
 @font-face{{font-family:'Rahil Plex';font-weight:400;src:url(data:font/ttf;base64,{b64('IBMPlexSans-Regular.ttf')})}}
 @font-face{{font-family:'Rahil Plex';font-weight:600;src:url(data:font/ttf;base64,{b64('IBMPlexSans-SemiBold.ttf')})}}
 *{{box-sizing:border-box}}html,body{{margin:0}}
-body{{width:{BASE}px;height:{BASE}px;background:{CANVAS};color:{SURFACE};font-family:'Rahil Plex';font-size:{LABEL_PX}px;line-height:1.08}}
-article{{width:{BASE}px;height:{BASE}px;padding:16px 16px 14px;display:flex;flex-direction:column;gap:8px}}
+body{{width:{BASE}px;height:{BASE}px;background:{CANVAS};color:{SURFACE};font-family:'Rahil Plex';font-size:{LABEL_PX}px;line-height:1}}
+article{{width:{BASE}px;height:{BASE}px;padding:10px 16px 10px;display:flex;flex-direction:column;gap:5px}}
 h1{{font:{TITLE_PX}px/1.0 'Rahil Display';margin:0;text-transform:uppercase}}
-.figure{{background:{SURFACE};color:{INK};border-radius:12px;padding:8px 12px;display:flex;flex-direction:column;gap:2px}}
-.figure p{{margin:0}}.context{{font-weight:600}}
+.figure{{background:{SURFACE};color:{INK};border-radius:12px;padding:5px var(--pad) 2px;display:flex;flex-direction:column;gap:1px}}
+.figure p{{margin:0}}.context{{font-weight:400;text-wrap:balance}}
+.row{{display:flex;justify-content:space-between;align-items:center}}.row b{{font-weight:600;white-space:nowrap}}.row+.track+.row{{margin-top:3px}}
+.track{{position:relative;height:12px;border:2px solid {INK}}}
+.bar{{position:absolute;top:0;bottom:0;background:{INK}}}
+.mean{{position:absolute;top:-4px;bottom:-4px;width:10px;margin-left:-5px;background:{ACCENT};border:2px solid {INK}}}
+.axis{{position:relative;height:{LABEL_PX + 2}px;margin-top:-1px}}.axis span{{position:absolute;top:3px}}
+.axis .mid{{left:50%;width:44px;margin-left:-22px;text-align:center}}
+.axis i{{position:absolute;top:0;width:2px;height:4px;margin-left:-1px;background:{INK}}}
 table{{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}}
 th,td{{padding:1px 0;vertical-align:middle;font-weight:400}}
 th{{text-align:left;padding-right:8px}}td{{text-align:right;white-space:nowrap;font-weight:600}}
-.hi{{display:inline-block;background:{ACCENT};color:{INK};outline:2px solid {INK};padding:0 5px;margin:2px 2px 2px 0}}
-.foot{{margin:0}}
+.hi{{display:inline-block;background:{ACCENT};color:{INK};outline:2px solid {INK};padding:0 5px;margin:2px 2px 2px 0}}.row .hi{{margin:0 2px 0 0;padding:0 1px}}
+.foot{{margin:auto 0 0}}
 """
-    body = (f'<article><h1>{lines(c["title"])}</h1><section class="figure" aria-label="{html.escape(c["context"], quote=True)}">'
-            f'<p class="context">{html.escape(c["context"])}</p><table>{rows}</table><p class="note">{html.escape(c["note"])}</p></section>'
-            f'<p class="foot">{lines("|".join(c["foot"]))}</p></article>')
+    body = (f'<article style="--pad:{"5px" if "chart" in c else "8px"}"><h1>{lines(c["title"])}</h1><section class="figure" aria-label="{html.escape(c["context"], quote=True)}">'
+            f'<p class="context">{html.escape(c["context"])}</p>{inner}</section>'
+            f'<p class="foot">{html.escape(c["foot"])}</p></article>')
     return f'<!doctype html><html lang="en"><head><meta charset="utf-8"><style>{css}</style></head><body>{body}</body></html>'
 
 
 MEASURE = r"""() => {
   const out = {sizes: [], problems: [], blocks: [], fonts: []};
-  const art = document.querySelector('article').getBoundingClientRect();
+  const artEl = document.querySelector('article'), art = artEl.getBoundingClientRect(), pad = getComputedStyle(artEl);
+  const padL = parseFloat(pad.paddingLeft), padB = parseFloat(pad.paddingBottom);
   const hasText = el => [...el.childNodes].some(n => n.nodeType === 3 && n.textContent.trim());
   for (const el of document.querySelectorAll('body *')) {
     const cs = getComputedStyle(el);
@@ -133,14 +157,14 @@ MEASURE = r"""() => {
     const rg = document.createRange(); rg.selectNodeContents(el); const r = rg.getBoundingClientRect();
     out.sizes.push([el.tagName.toLowerCase() + (el.className ? '.' + el.className : ''), parseFloat(cs.fontSize)]);
     out.fonts.push(cs.fontFamily.split(',')[0].replace(/["']/g, '').trim());
-    if (r.right > art.right - 15.5 || r.left < art.left + 15.5 || r.bottom > art.bottom - 13.5)
+    if (r.right > art.right - padL + 0.5 || r.left < art.left + padL - 0.5 || el.getBoundingClientRect().bottom > art.bottom - padB + 0.5)
       out.problems.push('outside its box: ' + el.textContent.trim().slice(0, 40));
   }
   const fig = document.querySelector('.figure'), fr = fig.getBoundingClientRect();
   for (const el of fig.querySelectorAll('*')) { const r = el.getBoundingClientRect();
     if (r.height && (r.top < fr.top - 0.5 || r.bottom > fr.bottom + 0.5 || r.right > fr.right + 0.5)) out.problems.push('figure child outside the figure: ' + el.textContent.trim().slice(0, 30)); }
   // Lines as drawn: group each text block's words by their top edge. A block that wraps may not leave a one-word line.
-  for (const el of document.querySelectorAll('h1, th, p, td')) {
+  for (const el of document.querySelectorAll('h1, th, p, td, .t')) {
     const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT), tops = [];
     for (let n = walker.nextNode(); n; n = walker.nextNode()) {
       const re = /\S+/g; let m;
