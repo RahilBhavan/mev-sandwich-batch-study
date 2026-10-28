@@ -1,0 +1,3 @@
+Palette check: every pixel must be #111214, #F5F5EF, #FFE500 or an anti-aliased blend of two of them (RGB distance <= 6).
+wed28-am-mev-square.png: 1080x1080, 1166400 px; exact #111214 655029, #F5F5EF 456865, #FFE500 10728; anti-aliased blends 43778; off-palette 0; PASS
+wed28-pm-mev-slippage-square.png: 1080x1080, 1166400 px; exact #111214 622708, #F5F5EF 492436, #FFE500 7627; anti-aliased blends 43629; off-palette 0; PASS

@@ -1,0 +1,215 @@
+{
+  "wed28-am-mev": {
+    "slot": "2026-10-28 09:30 ET",
+    "png": "wed28-am-mev-square.png",
+    "sha256": "44f0a7aa163fcf7744d3ff2f69a3dde7aff1ef46e06d4416b3a677facb80d581",
+    "canvas_px": 390,
+    "min_label_px": 22,
+    "title_px": 48,
+    "displayed_px": {
+      "360": {
+        "label_px": 18.5,
+        "title_px": 40.4
+      },
+      "390": {
+        "label_px": 20.2,
+        "title_px": 44.1
+      },
+      "326 (floor box)": {
+        "label_px": 18.4,
+        "title_px": 40.1
+      }
+    },
+    "blocks": [
+      {
+        "text": "52% or 75%:order matters.",
+        "lines": 2,
+        "words_per_line": [
+          3,
+          2
+        ]
+      },
+      {
+        "text": "Share of $12,387 loss recovered",
+        "lines": 1,
+        "words_per_line": [
+          5
+        ]
+      },
+      {
+        "text": "Arrival order",
+        "lines": 1,
+        "words_per_line": [
+          2
+        ]
+      },
+      {
+        "text": "51.7%",
+        "lines": 1,
+        "words_per_line": [
+          1
+        ]
+      },
+      {
+        "text": "Random tie-breaks,mean of 200",
+        "lines": 2,
+        "words_per_line": [
+          2,
+          3
+        ]
+      },
+      {
+        "text": "75.4%",
+        "lines": 1,
+        "words_per_line": [
+          1
+        ]
+      },
+      {
+        "text": "5th–95th percentile: 68%–84%",
+        "lines": 1,
+        "words_per_line": [
+          3
+        ]
+      },
+      {
+        "text": "Same orders, one WETH/USDT pool,Oct 5–11, 2026. Replay, not live.Source: mev-sandwich-batch-study,data as of Oct 17, 2026.",
+        "lines": 4,
+        "words_per_line": [
+          5,
+          6,
+          2,
+          6
+        ]
+      }
+    ],
+    "palette": {
+      "size": [
+        1080,
+        1080
+      ],
+      "pixels": 1166400,
+      "exact": {
+        "#111214": 655029,
+        "#F5F5EF": 456865,
+        "#FFE500": 10728
+      },
+      "blended": 43778,
+      "off_palette": 0
+    },
+    "problems": []
+  },
+  "wed28-pm-mev-slippage": {
+    "slot": "2026-10-28 18:00 ET",
+    "png": "wed28-pm-mev-slippage-square.png",
+    "sha256": "fc1c2dc3a982fb774ad947eee96d631b1c1c9dda5329771d52e1fa04119c89e7",
+    "canvas_px": 390,
+    "min_label_px": 22,
+    "title_px": 48,
+    "displayed_px": {
+      "360": {
+        "label_px": 18.5,
+        "title_px": 40.4
+      },
+      "390": {
+        "label_px": 20.2,
+        "title_px": 44.1
+      },
+      "326 (floor box)": {
+        "label_px": 18.4,
+        "title_px": 40.1
+      }
+    },
+    "blocks": [
+      {
+        "text": "98% of slippagetolerance taken.",
+        "lines": 2,
+        "words_per_line": [
+          3,
+          2
+        ]
+      },
+      {
+        "text": "Dollars, 115 of 244 victims",
+        "lines": 1,
+        "words_per_line": [
+          5
+        ]
+      },
+      {
+        "text": "Tolerance set",
+        "lines": 1,
+        "words_per_line": [
+          2
+        ]
+      },
+      {
+        "text": "$1,582",
+        "lines": 1,
+        "words_per_line": [
+          1
+        ]
+      },
+      {
+        "text": "Taken by attackers",
+        "lines": 1,
+        "words_per_line": [
+          3
+        ]
+      },
+      {
+        "text": "$1,544",
+        "lines": 1,
+        "words_per_line": [
+          1
+        ]
+      },
+      {
+        "text": "Share taken",
+        "lines": 1,
+        "words_per_line": [
+          2
+        ]
+      },
+      {
+        "text": "98%",
+        "lines": 1,
+        "words_per_line": [
+          1
+        ]
+      },
+      {
+        "text": "Summed dollars, not a median.",
+        "lines": 1,
+        "words_per_line": [
+          5
+        ]
+      },
+      {
+        "text": "WETH/USDT, Oct 5–11, 2026.Nonzero decoded limits only.Source: mev-sandwich-batch-study,data as of Oct 17, 2026.",
+        "lines": 4,
+        "words_per_line": [
+          4,
+          4,
+          2,
+          6
+        ]
+      }
+    ],
+    "palette": {
+      "size": [
+        1080,
+        1080
+      ],
+      "pixels": 1166400,
+      "exact": {
+        "#111214": 622708,
+        "#F5F5EF": 492436,
+        "#FFE500": 7627
+      },
+      "blended": 43629,
+      "off_palette": 0
+    },
+    "problems": []
+  }
+}
