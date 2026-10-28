@@ -1,0 +1,36 @@
+{
+ "id": "wed28-pm-mev-slippage",
+ "number": 24,
+ "series": "Onchain Receipts",
+ "title": "98% of the tolerance, taken.",
+ "key": "98%",
+ "sub": "Slippage tolerance (no-attack output − victim's minimum), 115 of 244 victims with decoded nonzero limits",
+ "hero": [
+  "98%",
+  "of $1,582 taken, $38 left"
+ ],
+ "source": "mev-sandwich-batch-study methods.md · busiest WETH/USDT pool, Oct 5–11, 2026",
+ "stamp": "SINGLE SOURCE · STUDY TABLES.MD",
+ "form": "hbars",
+ "foot_ink": "ink",
+ "illustration": false,
+ "derived": [],
+ "params": {
+  "xmax": 100,
+  "rows": [
+   [
+    "Taken",
+    97.59,
+    "$1,544"
+   ],
+   [
+    "Left",
+    2.41,
+    "$38"
+   ]
+  ],
+  "whole": "$1,582 summed tolerance",
+  "digits": 0
+ },
+ "alt": "Exhibit 024: 98% of the tolerance, taken. Slippage tolerance (no-attack output − victim's minimum), 115 of 244 victims with decoded nonzero limits. Of $1,582 in summed tolerance, attackers took $1,544 (98%) and $38 (2%) was left. A ratio of summed dollars over that subset, not a per-victim median or all trades. Source: mev-sandwich-batch-study methods.md, busiest WETH/USDT pool, Oct 5–11, 2026."
+}

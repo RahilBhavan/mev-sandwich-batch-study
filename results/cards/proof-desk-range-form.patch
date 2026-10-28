@@ -1,0 +1,276 @@
+From 119a94cdfa9ee54b762bc1317f8a03ed565c11db Mon Sep 17 00:00:00 2001
+From: Rahil Bhavan <rbhavanzim@gmail.com>
+Date: Wed, 28 Oct 2026 12:37:04 -0400
+Subject: [PATCH] Research exhibits: a range form (a run against its spread,
+ mean marker, both axis ends) and an optional footer ink
+
+Adds the `range` form, an optional `foot_ink` theme colour for the footer text and a hand-written `alt` that
+`pd research hubspec` keeps in place of the generated one. Used by the Oct 28 MEV cards (request cr-3845f126).
+
+Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>
+---
+ proofdesk/research/forms_bars.py | 39 +++++++++++++++++++++
+ proofdesk/research/frame.py      |  5 +--
+ proofdesk/research/hubcard.py    | 15 ++++++--
+ proofdesk/research/render.py     |  4 +--
+ proofdesk/research/rules.py      |  6 ++--
+ proofdesk/research/spec.py       |  2 +-
+ tests/test_research_range.py     | 59 ++++++++++++++++++++++++++++++++
+ 7 files changed, 119 insertions(+), 11 deletions(-)
+ create mode 100644 tests/test_research_range.py
+
+diff --git a/proofdesk/research/forms_bars.py b/proofdesk/research/forms_bars.py
+index 4cedd08..9d25b49 100644
+--- a/proofdesk/research/forms_bars.py
++++ b/proofdesk/research/forms_bars.py
+@@ -176,3 +176,42 @@ def paired(p: dict, m: dict, box) -> str:
+         out.append(text(cx, bottom + 66, lab, m, TYPE["label"], "ink", "middle", 700 if i == p["hi"] else 400))
+     out.append("</svg>")
+     return "".join(out)
++
++
++def range_(p: dict, m: dict, box) -> str:
++    """p: scale [lo, hi], unit, rows [{label, at, text} | {label, from, to, text, mean, mean_text}], hi (row holding the finding).
++    One shared zero-based axis, printed at both ends. A row with `at` is a single run (grey tick); a row with `from`/`to` is
++    the spread of many runs (grey bar) and, when it holds the finding, carries its mean as the one yellow marker."""
++    rows = p["rows"]
++    lo, hi_s = p["scale"]
++    unit = p.get("unit", "%")
++    w, h = box.w, box.h
++    x0, x1 = 250, w - 60
++    sx = (x1 - x0) / (hi_s - lo)
++    xs = lambda v: x0 + (v - lo) * sx
++    row_h = min(190, (h - 150) / len(rows))  # rows sit close to their axis; spare height splits above and below
++    top = max(0, (h - (row_h * len(rows) + 150)) / 2)
++    axis_y = top + 40 + row_h * len(rows) + 30
++    out = [f"<svg width='{w}' height='{h}' viewBox='0 0 {w} {h}'>"]
++    step = (hi_s - lo) / 2
++    for k in range(3):
++        v = lo + step * k
++        out.append(line(xs(v), top + 10, xs(v), axis_y, m["ink"] if k == 0 else m["grid"], 1.6 if k == 0 else 1))
++        out.append(text(xs(v), axis_y + 38, f"{v:g}{unit}", m, TYPE["small"], "ink2", "middle"))
++    out.append(line(x0, axis_y, x1, axis_y, m["ink"], 1.6))
++    for i, r in enumerate(rows):
++        cy = top + 40 + row_h * (i + 0.5)
++        is_hi = i == p["hi"]
++        out.append(text(x0 - 22, cy + 9, r["label"], m, TYPE["value"], "ink", "end", 700 if is_hi else 400))
++        out.append(line(x0, cy, x1, cy, m["context2"], 2))
++        if "at" in r:
++            out.append(rect(xs(r["at"]) - 7, cy - 24, 14, 48, m, False, reveal="ctx bar", at=r["at"]))
++            out.append(text(xs(r["at"]), cy - 38, r["text"], m, TYPE["value"], "ink2", "middle", 700))
++            continue
++        out.append(rect(xs(r["from"]), cy - 24, xs(r["to"]) - xs(r["from"]), 48, m, False, reveal="ctx hbar", frm=r["from"], to=r["to"]))
++        out.append(text((xs(r["from"]) + xs(r["to"])) / 2, cy + 62, r["text"], m, TYPE["value"], "ink2", "middle", 700))
++        if "mean" in r:
++            out.append(rect(xs(r["mean"]) - 8, cy - 40, 16, 80, m, True, reveal="hi bar", mean=r["mean"]))
++            out.append(text(xs(r["mean"]), cy - 56, r["mean_text"], m, TYPE["value"], "accent_text", "middle", 700, cls="rv hi"))
++    out.append("</svg>")
++    return "".join(out)
+diff --git a/proofdesk/research/frame.py b/proofdesk/research/frame.py
+index bffa2f3..46a8527 100644
+--- a/proofdesk/research/frame.py
++++ b/proofdesk/research/frame.py
+@@ -29,6 +29,7 @@ class Exhibit:
+     derived: list = field(default_factory=list)  # [{value, expr, digits}]: receipts for computed numbers
+     illustration: bool = False
+     handle: str = "@Bhavanzim"  # the masthead's account; "" shows the exhibit number alone
++    foot_ink: str = ""  # a theme colour name ("ink") for the footer text; "" keeps the grey default
+ 
+ 
+ @dataclass
+@@ -121,8 +122,8 @@ def page(ex: Exhibit, figure_svg: str, size: str, mode: str, motion: bool = True
+            f".hero span{{display:block;font-size:21px;font-style:italic;color:{m['ink2']};margin-top:10px;line-height:1.3;text-wrap:balance}}"
+            f".fig{{position:absolute;left:64px;top:{lay['fig_top']}px;width:{w - 128}px;height:{fig_h}px}}"
+            f".foot{{position:absolute;left:64px;right:64px;bottom:30px;border-top:1px solid {m['rule']};padding-top:14px;"
+-           f"display:flex;justify-content:space-between;align-items:center;gap:28px;font-size:{TYPE['small'] - 1}px;color:{m['ink3']};line-height:1.35}}"
+-           f".foot b{{color:{m['ink2']};font-weight:700}}"
++           f"display:flex;justify-content:space-between;align-items:center;gap:28px;font-size:{TYPE['small'] - 1}px;color:{m[ex.foot_ink or 'ink3']};line-height:1.35}}"
++           f".foot b{{color:{m[ex.foot_ink or 'ink2']};font-weight:700}}"
+            f".stamp{{display:flex;align-items:center;gap:10px;background:{m['accent']};color:{m['on_accent']};padding:8px 14px;"
+            f"font-size:{TYPE['stamp']}px;font-weight:800;letter-spacing:.1em;font-stretch:110%;white-space:nowrap}}"
+            f".rv{{transform-box:fill-box}}.bar{{transform-origin:50% 100%}}.hbar{{transform-origin:0 50%}}")
+diff --git a/proofdesk/research/hubcard.py b/proofdesk/research/hubcard.py
+index 88cf811..de60474 100644
+--- a/proofdesk/research/hubcard.py
++++ b/proofdesk/research/hubcard.py
+@@ -26,7 +26,8 @@ def exhibit_of(raw: dict, number: int | None = None) -> Exhibit:
+     hero = raw["hero"]
+     return Exhibit(raw["id"], int(number if number is not None else raw.get("number", 0)), raw.get("series", "Research"),
+                    raw["title"], raw["key"], raw["sub"], tuple(hero), raw["source"], raw["stamp"], raw["form"], raw["params"],
+-                   raw.get("note", ""), list(raw.get("derived", [])), bool(raw.get("illustration", False)))
++                   raw.get("note", ""), list(raw.get("derived", [])), bool(raw.get("illustration", False)),
++                   foot_ink=str(raw.get("foot_ink", "")))
+ 
+ 
+ def card_html(raw: dict) -> str:
+@@ -48,6 +49,9 @@ def gridlines(ex: Exhibit) -> list[float]:
+         return nice_ticks(max(v for _, v in p["items"]))
+     if ex.form in ("hbars",):
+         return list(range(0, int(p.get("xmax", 50)) + 1, 10))
++    if ex.form == "range":
++        lo, hi = p["scale"]
++        return [lo, (lo + hi) / 2, hi]
+     if ex.form in ("trend", "multiples", "scatter"):
+         html = card_html({**raw_of(ex)})
+         return sorted({float(n.replace(",", "")) for n in re.findall(r">(-?[\d,]+(?:\.\d+)?)</text>", html)})
+@@ -57,7 +61,7 @@ def gridlines(ex: Exhibit) -> list[float]:
+ def raw_of(ex: Exhibit) -> dict:
+     return {"id": ex.id, "number": ex.number, "series": ex.series, "title": ex.title, "key": ex.key, "sub": ex.sub,
+             "hero": list(ex.hero), "source": ex.source, "note": ex.note, "stamp": ex.stamp, "form": ex.form, "params": ex.params,
+-            "derived": ex.derived, "illustration": ex.illustration}
++            "derived": ex.derived, "illustration": ex.illustration, **({"foot_ink": ex.foot_ink} if ex.foot_ink else {})}
+ 
+ 
+ def _fmt(v) -> str:
+@@ -76,6 +80,10 @@ def _figure_words(ex: Exhibit) -> str:
+         return "; ".join(f"{lab}: {_fmt(v) if v else 'none'}{mark(i)}" for i, (lab, v) in enumerate(items)) + "."
+     if ex.form == "hbars":
+         return "; ".join(f"{lab}: {pct:.1f}% ({right}){' (highlighted)' if i == 0 else ''}" for i, (lab, pct, right) in enumerate(p["rows"])) + "."
++    if ex.form == "range":
++        u, lo, hi = p.get("unit", "%"), *p["scale"]
++        rows = [f"{r['label']}: {r['text']}" + (f", {r['mean_text']}" if "mean" in r else "") for r in p["rows"]]
++        return f"On a {lo:g}{u} to {hi:g}{u} scale, " + "; ".join(rows) + "."
+     if ex.form == "timeline":
+         return "; ".join(f"{d}: {lab}{(', ' + det) if det else ''}{mark(i)}" for i, (d, lab, det) in enumerate(p["events"])) + "."
+     if ex.form == "ledger":
+@@ -109,7 +117,8 @@ def alt_text(ex: Exhibit) -> str:
+ def hub_spec(path: Path) -> dict:
+     ex, derived, illustration = exspec.load(Path(path))
+     raw = raw_of(ex)
+-    return {"id": ex.id, "kind": "exhibit", "title": ex.title, "alt": alt_text(ex), "source": ex.source,
++    written = json.loads(Path(path).read_text()).get("alt")  # an alt written by hand for this card wins over the generated one
++    return {"id": ex.id, "kind": "exhibit", "title": ex.title, "alt": written or alt_text(ex), "source": ex.source,
+             "scale": gridlines(ex), "exhibit": raw}
+ 
+ 
+diff --git a/proofdesk/research/render.py b/proofdesk/research/render.py
+index bc6631b..d19f770 100644
+--- a/proofdesk/research/render.py
++++ b/proofdesk/research/render.py
+@@ -12,14 +12,14 @@ import subprocess
+ from pathlib import Path
+ 
+ from . import exhibits as exh
+-from .forms_bars import columns, hbars, ledger, paired, table
++from .forms_bars import columns, hbars, ledger, paired, range_, table
+ from .forms_flow import flow
+ from .forms_lines import multiples, scatter, timeline, trend
+ from .frame import figure_box, page
+ from .theme import MODES, SIZES
+ 
+ FORMS = {"columns": columns, "hbars": hbars, "ledger": ledger, "trend": trend, "multiples": multiples, "scatter": scatter,
+-         "timeline": timeline, "flow": flow, "table": table, "paired": paired}
++         "timeline": timeline, "flow": flow, "table": table, "paired": paired, "range": range_}
+ WORKER = Path(__file__).with_name("research_worker.py")
+ FPS, REVEAL_S, HOLD_S = 30, 2.4, 4
+ 
+diff --git a/proofdesk/research/rules.py b/proofdesk/research/rules.py
+index 61ba421..1df41af 100644
+--- a/proofdesk/research/rules.py
++++ b/proofdesk/research/rules.py
+@@ -14,7 +14,7 @@ from .frame import Exhibit
+ 
+ SERIES = {"Sats per Share", "ETH per Share", "Onchain Receipts", "Eval Log", "Spec It", "Drag the Number", "Build Log",
+           "Treasury Desk", "Research"}
+-FORMS = {"columns", "hbars", "ledger", "trend", "multiples", "scatter", "timeline", "flow", "table", "paired"}
++FORMS = {"columns", "hbars", "ledger", "trend", "multiples", "scatter", "timeline", "flow", "table", "paired", "range"}
+ ILLUSTRATION = "ILLUSTRATION · TOY NUMBERS"
+ CHECKED = "CHECKED · "
+ SINGLE_SOURCE = "SINGLE SOURCE · "  # a real number with no independent check: what it rests on, and no tick
+@@ -31,7 +31,7 @@ RULES = {
+     "R9": "No em dashes in any exhibit text (house rule T-H1).",
+     "R10": "Lengths start at zero: bar forms take no y floor and no negative lengths (Tufte: lie factor).",
+     "R11": "A comparison beside the number makes it concrete (Heath, Made to Stick): a note needs a compare line or a second line.",
+-    "R12": "The form is one of the eight exhibit forms (plus table and paired from the adapter).",
++    "R12": "The form is one of the eight exhibit forms (plus table and paired from the adapter, and range for a run against its spread).",
+     "R13": "No starter text is left in: every field is filled from real data (pd research new writes placeholders).",
+ }
+ PLACEHOLDERS = ("State the finding", "the finding", "What is measured", "what the hero number means", "Where the numbers come from",
+@@ -128,7 +128,7 @@ def lint(ex: Exhibit, derived: list[dict] | None = None, illustration: bool = Fa
+     if ex.form not in FORMS:
+         out.append(("R12", f"form {ex.form!r} is not one of {sorted(FORMS)}"))
+     hi = p.get("hi", p.get("result"))
+-    if ex.form in ("columns", "scatter", "timeline", "flow", "multiples") and not isinstance(hi, int):
++    if ex.form in ("columns", "scatter", "timeline", "flow", "multiples", "range") and not isinstance(hi, int):
+         out.append(("R1", f"{ex.form} needs an integer hi naming the one highlighted datum"))
+     if ex.form == "columns" and isinstance(hi, int) and not 0 <= hi < len(p.get("items", [])):
+         out.append(("R1", f"hi {hi} is outside the {len(p.get('items', []))} items"))
+diff --git a/proofdesk/research/spec.py b/proofdesk/research/spec.py
+index 7049725..df3276a 100644
+--- a/proofdesk/research/spec.py
++++ b/proofdesk/research/spec.py
+@@ -49,5 +49,5 @@ def load(path: Path, assign: bool = True) -> tuple[Exhibit, list[dict], bool]:
+     ex = Exhibit(raw["id"], int(number), raw.get("series", "Research"), raw["title"], raw["key"], raw["sub"], tuple(hero),
+                  raw["source"], raw["stamp"], raw["form"], raw["params"], raw.get("note", ""),
+                  list(raw.get("derived", [])), bool(raw.get("illustration", False)),
+-                 str(raw.get("handle", "@Bhavanzim")))
++                 str(raw.get("handle", "@Bhavanzim")), str(raw.get("foot_ink", "")))
+     return ex, ex.derived, ex.illustration
+diff --git a/tests/test_research_range.py b/tests/test_research_range.py
+new file mode 100644
+index 0000000..b3d0fe9
+--- /dev/null
++++ b/tests/test_research_range.py
+@@ -0,0 +1,59 @@
++import json
++import tempfile
++import unittest
++from pathlib import Path
++
++from proofdesk.research import hubcard, rules, spec as exspec
++
++SPEC = {
++    "id": "range-test", "number": 99, "series": "Onchain Receipts", "title": "Replay recovered 75%. Arrival order: 52%.",
++    "key": "75%", "sub": "Share of loss recovered (counterfactual replay)", "hero": ["75%", "mean of 200 random orders"],
++    "source": "a study · Oct 5–11, 2026", "stamp": "SINGLE SOURCE · STUDY SUMMARY.JSON", "form": "range", "foot_ink": "ink",
++    "alt": "A hand-written alt.",
++    "params": {"scale": [0, 100], "unit": "%", "draws": 200, "hi": 1, "rows": [
++        {"label": "Arrival order", "at": 51.72, "text": "52%"},
++        {"label": "Random orders", "from": 67.84, "to": 84.03, "text": "68–84%", "mean": 75.45, "mean_text": "Mean 75%"}]},
++}
++
++
++class RangeFormTest(unittest.TestCase):
++    def setUp(self):
++        self.dir = tempfile.TemporaryDirectory()
++        self.path = Path(self.dir.name) / "range.exhibit.json"
++        self.path.write_text(json.dumps(SPEC))
++
++    def tearDown(self):
++        self.dir.cleanup()
++
++    def test_range_is_lint_clean_and_draws_both_ends_of_the_axis_and_one_accent_marker(self):
++        ex, derived, ill = exspec.load(self.path)
++        self.assertEqual(rules.lint(ex, derived, ill), [])
++        html = hubcard.card_html(SPEC)
++        for label in (">0%<", ">50%<", ">100%<", ">Mean 75%<", ">68–84%<", ">52%<"):
++            self.assertIn(label, html)
++        self.assertEqual(sum("fill='#FFE500'" in r for r in html.split("<rect")[1:] if "data-mean" in r or "data-frm" in r or "data-at" in r), 1)  # one yellow mark: the mean
++        self.assertNotIn("<script", html)
++
++    def test_range_needs_an_integer_hi(self):
++        bad = {**SPEC, "params": {**SPEC["params"], "hi": None}}
++        ex = hubcard.exhibit_of(bad)
++        self.assertIn("R1", [r for r, _ in rules.lint(ex)])
++
++    def test_a_number_not_in_the_data_is_refused(self):
++        ex = hubcard.exhibit_of({**SPEC, "hero": ["81%", "mean of 200 random orders"]})
++        self.assertIn("R5", [r for r, _ in rules.lint(ex)])
++
++    def test_footer_ink_colours_the_footer_and_a_hand_written_alt_wins(self):
++        html = hubcard.card_html(SPEC)
++        self.assertIn("font-size:18px;color:#F5F5EF;line-height:1.35", html)
++        self.assertIn("color:#F5F5EF;font-weight:700", html)
++        default = hubcard.card_html({k: v for k, v in SPEC.items() if k != "foot_ink"})
++        self.assertIn("font-size:18px;color:#B7B8B1;line-height:1.35", default)
++        card = hubcard.hub_spec(self.path)
++        self.assertEqual(card["alt"], "A hand-written alt.")
++        self.assertEqual(card["scale"], [0, 50.0, 100])
++        self.assertEqual(card["exhibit"]["foot_ink"], "ink")
++
++
++if __name__ == "__main__":
++    unittest.main()
+-- 
+2.55.0
+

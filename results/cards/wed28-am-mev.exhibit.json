@@ -1,0 +1,43 @@
+{
+ "id": "wed28-am-mev",
+ "number": 23,
+ "series": "Onchain Receipts",
+ "title": "Replay recovered 75%. Arrival order: 52%.",
+ "key": "75%",
+ "sub": "Share of $12,387 sandwich loss recovered (counterfactual replay)",
+ "hero": [
+  "75%",
+  "mean of 200 random orders"
+ ],
+ "source": "mev-sandwich-batch-study replay · busiest WETH/USDT pool, Oct 5–11, 2026",
+ "stamp": "SINGLE SOURCE · STUDY SUMMARY.JSON",
+ "form": "range",
+ "foot_ink": "ink",
+ "illustration": false,
+ "derived": [],
+ "params": {
+  "scale": [
+   0,
+   100
+  ],
+  "unit": "%",
+  "draws": 200,
+  "hi": 1,
+  "rows": [
+   {
+    "label": "Arrival order",
+    "at": 51.72,
+    "text": "52%"
+   },
+   {
+    "label": "Random orders",
+    "from": 67.84,
+    "to": 84.03,
+    "text": "68–84%",
+    "mean": 75.45,
+    "mean_text": "Mean 75%"
+   }
+  ]
+ },
+ "alt": "Exhibit 023: Replay recovered 75%. Arrival order: 52%. Share of $12,387 sandwich loss recovered (counterfactual replay), on a 0% to 100% scale: arrival order 52%; random orders 68–84%, with a mean of 75% across 200 random tie-break orders. Source: mev-sandwich-batch-study replay, busiest WETH/USDT pool, Oct 5–11, 2026."
+}
