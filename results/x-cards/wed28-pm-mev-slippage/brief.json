@@ -1,0 +1,46 @@
+{
+ "id": "wed28-pm-mev-slippage",
+ "export_px": [
+  1080,
+  1080
+ ],
+ "authored_px": 390,
+ "title_px": 48,
+ "label_px": 22,
+ "min_label_px": 22,
+ "point_px": 48,
+ "measurement_basis": "canvas",
+ "sizes_checked": [
+  "1080x1080",
+  "390x390"
+ ],
+ "label_floor_px": 22,
+ "label_px_at_326_feed": 18.4,
+ "title_px_at_326_feed": 40.1,
+ "title_lines": 2,
+ "axis_lines": 4,
+ "footer_lines": 3,
+ "fonts_loaded": [
+  [
+   "Rahil Display",
+   true
+  ],
+  [
+   "Rahil Plex",
+   true
+  ]
+ ],
+ "overflow": [],
+ "wrapped": [],
+ "text": {
+  "title": "98% of the tolerance, taken.",
+  "axis": "Slippage tolerance (no-attack output − victim's minimum), 115 of 244 victims with decoded nonzero limits",
+  "footer": "Source: mev-sandwich-batch-study methods.md · busiest WETH/USDT pool, Oct 5–11, 2026"
+ },
+ "meets_label_floor": true,
+ "design_status": "pending",
+ "sha256": {
+  "card.html": "a82a076fb6f025aaf10ea89eb8da42da24f7b77b53f3ad0decc620a1c246a36a",
+  "card.png": "97b05e521a4827023682aa05b25892d2153456e972cb8f0c3500fb906d19354e"
+ }
+}

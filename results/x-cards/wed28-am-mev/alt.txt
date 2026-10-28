@@ -1,0 +1,1 @@
+Replay recovered 75%. Arrival order: 52%. Share of $12,387 sandwich loss recovered (counterfactual replay), on a 0–100% scale: arrival order 52%; across 200 random tie-break orders, the mean is 75% (marked on the random-orders bar) and the middle 90% recovered 68–84%. Same orders, one pool. Source: mev-sandwich-batch-study replay · busiest WETH/USDT pool, Oct 5–11, 2026.

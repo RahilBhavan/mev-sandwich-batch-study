@@ -1,0 +1,46 @@
+{
+ "id": "wed28-am-mev",
+ "export_px": [
+  1080,
+  1080
+ ],
+ "authored_px": 390,
+ "title_px": 48,
+ "label_px": 18.5,
+ "min_label_px": 18.5,
+ "point_px": 48,
+ "measurement_basis": "canvas",
+ "sizes_checked": [
+  "1080x1080",
+  "390x390"
+ ],
+ "label_floor_px": 22,
+ "label_px_at_326_feed": 15.5,
+ "title_px_at_326_feed": 40.1,
+ "title_lines": 3,
+ "axis_lines": 2,
+ "footer_lines": 2,
+ "fonts_loaded": [
+  [
+   "Rahil Display",
+   true
+  ],
+  [
+   "Rahil Plex",
+   true
+  ]
+ ],
+ "overflow": [],
+ "wrapped": [],
+ "text": {
+  "title": "Replay recovered 75%. Arrival order: 52%.",
+  "axis": "Share of $12,387 sandwich loss recovered (counterfactual replay)",
+  "footer": "Source: mev-sandwich-batch-study replay · busiest WETH/USDT pool, Oct 5–11, 2026"
+ },
+ "meets_label_floor": false,
+ "design_status": "pending",
+ "sha256": {
+  "card.html": "d68cba6665b47b3ee3286ca33710ec7c5836cbdd05ab6e28167f5713b6d7f116",
+  "card.png": "5677b7d014a3430b8a7b1bd6dfaf211d1ee08210b8a32dce0be7555ebab39ddd"
+ }
+}

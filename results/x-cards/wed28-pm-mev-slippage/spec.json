@@ -1,0 +1,11 @@
+{
+ "id": "wed28-pm-mev-slippage",
+ "kind": "fill",
+ "title": "98% of the tolerance, taken.",
+ "axis": "Slippage tolerance (no-attack output − victim's minimum), 115 of 244 victims with decoded nonzero limits",
+ "source": "Source: mev-sandwich-batch-study methods.md · busiest WETH/USDT pool, Oct 5–11, 2026",
+ "share": 0.9761446451930245,
+ "taken_text": "Taken $1,544",
+ "left_text": "Left $38",
+ "alt": "98% of the tolerance, taken. Slippage tolerance (no-attack output − victim's minimum), 115 of 244 victims with decoded nonzero limits: their slippage tolerance summed to $1,582; attackers took $1,544 of it and left $38. A ratio of summed dollars over that subset, not a per-victim median or all trades. Source: mev-sandwich-batch-study methods.md · busiest WETH/USDT pool, Oct 5–11, 2026."
+}
