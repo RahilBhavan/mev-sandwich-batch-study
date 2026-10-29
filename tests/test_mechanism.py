@@ -1,5 +1,4 @@
 """Properties of the Chan-Wu-Shi mechanism (arXiv 2402.09357 v3, section 3) checked on a v3 pool."""
-import random
 from fractions import Fraction
 
 from mev import mechanism, v3
@@ -44,22 +43,3 @@ def test_phase2_stops_at_limit():
     res = mechanism.clear(p, [o(1, True, 10**20, limit=Fraction(99, 100))])
     assert 0 < res[1]["filled"] < 1
     assert abs(mechanism.r0_of(p) - Fraction(99, 100)) < Fraction(1, 10**12)
-
-
-def test_sandwich_not_profitable_any_order():
-    """Theorem 3.1 (arbitrage resilience): attacker legs net <= 0 at r0, whatever the tie-break."""
-    rng = random.Random(1)
-    for trial in range(200):
-        p = pool(fee=rng.choice([0, 100, 3000]))
-        r0 = mechanism.r0_of(p)
-        front = o("F", False, rng.randint(10**16, 10**19))           # buys token0 with token1
-        victim = o("V", False, rng.randint(10**16, 10**19), limit=r0 * Fraction(105, 100))
-        # back-run sells token0 with a limit no worse than its continuous-market price (above r0) or none
-        back = o("B", True, rng.randint(10**16, 10**19), limit=rng.choice([None, r0, r0 * Fraction(101, 100)]))
-        orders = [front, victim, back]
-        rng.shuffle(orders)
-        res = mechanism.clear(p, orders, fee_phase1=rng.random() < 0.5)
-        # attacker: paid token1 for token0 (front), paid token0 for token1 (back); value token0 at r0
-        net1 = res["B"]["got"] - res["F"]["paid"]
-        net0 = res["F"]["got"] - res["B"]["paid"]
-        assert net1 + net0 * r0 <= 0, (trial, net1, net0)

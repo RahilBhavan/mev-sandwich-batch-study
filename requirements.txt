@@ -1,4 +1,5 @@
-# Versions the tests were run with on 2026-10-24 (Python 3.14.7). CI uses Python 3.13.
+# Versions the tests were run with on 2026-10-24 (Python 3.14.7). CI uses Python 3.13. hypothesis was added on 2026-10-29 and run on Python 3.13.
+hypothesis==6.170.13
 matplotlib==3.11.2
 pyarrow==26.0.0
 pytest==9.1.1
