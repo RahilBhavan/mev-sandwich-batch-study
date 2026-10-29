@@ -52,7 +52,7 @@ Further results:
 
 ## Run it
 
-Prerequisites: Python 3.13 (the version tested) and [uv](https://docs.astral.sh/uv/). The pipeline uses the standard library plus `pyarrow` and `matplotlib`; `requirements.txt` pins the versions the tests last ran with.
+Prerequisites: Python 3.13 (the version tested) and [uv](https://docs.astral.sh/uv/). The pipeline uses the standard library plus `pyarrow` and `matplotlib`; `requirements.txt` pins the versions the tests last ran with, including `hypothesis` for the property-based tests.
 
 Install and run the tests:
 
@@ -62,7 +62,9 @@ uv pip install --python .venv/bin/python -r requirements.txt
 .venv/bin/python -m pytest -q
 ```
 
-`pytest.ini` points pytest at `tests/` and the repo root, so plain `.venv/bin/pytest` works from the root as well. The suite has 22 tests. Observed on 2026-10-28 with the pinned requirements installed by uv: `22 passed in 0.97s`. The tests cover the v3 math, calldata decoding, the detector, the mechanism's rules and Theorem 3.1, and that the multi-pool block filter never changes detection.
+`pytest.ini` points pytest at `tests/` and the repo root, so plain `.venv/bin/pytest` works from the root as well. The suite has 40 tests: 21 hand-written ones and 19 property-based ones (`tests/test_v3_properties.py`, `tests/test_mechanism_properties.py`). The hand-written tests cover the v3 math, calldata decoding, the detector, the mechanism's rules and that the multi-pool block filter never changes detection. The property tests run Hypothesis over the whole tick range, random `mul_div` inputs, random swap steps and random pools with random order sets, and check the mechanism's no-profit (Theorem 3.1), limit and token-conservation rules.
+
+CI runs `python -m pytest -q --hypothesis-profile=ci --hypothesis-seed=0` (500 examples per property, fixed seed, defined in `tests/conftest.py`). Plain `pytest` uses the `dev` profile (200 random examples). Observed on 2026-10-29 with the pinned requirements on Python 3.13: `36 passed, 4 xfailed in 7.57s` with the CI flags. Four tests are marked `xfail(strict=True)` because Hypothesis found counterexamples in `mev/mechanism.py` (three distinct causes); the reasons are in the test files and the pull request that added them. Fixing a defect turns its test into a strict-xfail failure until the marker is removed.
 
 Reproduce every result:
 
@@ -78,7 +80,7 @@ scripts/run_all.sh
 
 - `mev/`: the library. Exact v3 swap math, the detector, calldata decoding, the mechanism, RPC access and pool constants.
 - `scripts/`: the pipeline steps, the Dune-rule cross-check and the pool scans.
-- `tests/`: pytest tests for the v3 math, calldata decoding, the detector and the mechanism.
+- `tests/`: pytest and Hypothesis tests for the v3 math, calldata decoding, the detector and the mechanism.
 - `results/`: CSVs, `summary.json`, tables, the figure and its brief, and precision evidence. `results/simd-weth/` holds the memecoin extension, `results/multi-pool/` the three-pool, four-week detections and `results/spot-check/` the blind sample. `scripts/card.py` redraws the two "get back" cards (`results/mev-get-back-landscape.png`, `-square.png`) from `victims.csv`.
 - `docs/`: the methods note, research notes, plan and pool selection.
 - `textbook/`: a self-contained study guide (`index.html`) built by `build.py` from the results and the tested code.
