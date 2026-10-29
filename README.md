@@ -1,5 +1,6 @@
 # MEV sandwich batch study: sandwich losses on Uniswap v3, replayed through per-block two-phase clearing
 
+[![tests](https://github.com/RahilBhavan/mev-sandwich-batch-study/actions/workflows/test.yml/badge.svg?branch=main)](https://github.com/RahilBhavan/mev-sandwich-batch-study/actions/workflows/test.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 ![Cumulative victim loss over 236 sandwiches, 5–11 Oct 2026: $12,387 in the status quo, $3,041 with the same orders under per-block two-phase clearing, and about $0 if attackers stop](results/figure.png)
@@ -62,7 +63,7 @@ uv pip install --python .venv/bin/python -r requirements.txt
 .venv/bin/python -m pytest -q
 ```
 
-`pytest.ini` points pytest at `tests/` and the repo root, so plain `.venv/bin/pytest` works from the root as well. The suite has 22 tests. Observed on 2026-10-28 with the pinned requirements installed by uv: `22 passed in 0.97s`. The tests cover the v3 math, calldata decoding, the detector, the mechanism's rules and Theorem 3.1, and that the multi-pool block filter never changes detection.
+`pytest.ini` points pytest at `tests/` and the repo root, so plain `.venv/bin/pytest` works from the root as well. The suite has 22 tests, and CI fails if this count differs from what pytest collects (`scripts/check_readme_test_count.py`). Observed on 2026-10-28 with the pinned requirements installed by uv: `22 passed in 0.97s`. The tests cover the v3 math, calldata decoding, the detector, the mechanism's rules and Theorem 3.1, and that the multi-pool block filter never changes detection.
 
 Reproduce every result:
 

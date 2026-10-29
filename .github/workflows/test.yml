@@ -13,3 +13,4 @@ jobs:
           python-version: "3.13"
       - run: pip install -r requirements.txt
       - run: python -m pytest -q
+      - run: python scripts/check_readme_test_count.py
